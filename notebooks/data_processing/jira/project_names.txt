@@ -1,0 +1,1 @@
+http://www.bouncycastle.org/jira/browse/BJA-694
