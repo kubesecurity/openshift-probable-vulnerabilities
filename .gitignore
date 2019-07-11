@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# PyCharm
+.idea/
+
+# Triage
+triaged_datasets/
+
+# model assets
+model_assets/
