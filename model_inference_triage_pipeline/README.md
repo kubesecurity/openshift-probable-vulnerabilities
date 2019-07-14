@@ -19,7 +19,7 @@ Right now, we are using a stacked GRU + Attention-based deep learning model for 
 
 This screencast showcases a step-by-step procedure to leverage our pre-trained AI models and perform model inference and triage of probable vulnerabilities.
 
-[![asciicast](https://asciinema.org/a/8gA9nviECAmOaoyLObkEoaEPr.svg)](https://asciinema.org/a/8gA9nviECAmOaoyLObkEoaEPr.js)
+[![asciicast](https://asciinema.org/a/8gA9nviECAmOaoyLObkEoaEPr.svg)](https://asciinema.org/a/8gA9nviECAmOaoyLObkEoaEPr)
 
 <br>
 
