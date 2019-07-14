@@ -135,7 +135,7 @@ optional arguments:
 (venv) [dsarkar@localhost model_inference_triage_pipeline]$ # this takes one argument -d for number of days we want to go back since day before today 
 ```
 
-But before we run this, we need to make sure our authentication credentials are all setup in the [`cloud_constants.py`](https://github.com/fabric8-analytics/openshift-probable-vulnerabilities/blob/master/model_inference_triage_pipeline/utils/cloud_constants.py) file, part of which is depicted below.
+But before we run this, we need to make sure our authentication credentials are all setup in the [__`cloud_constants.py`__](https://github.com/fabric8-analytics/openshift-probable-vulnerabilities/blob/master/model_inference_triage_pipeline/utils/cloud_constants.py) file, part of which is depicted below.
 ```bash
 # Please make sure you have your AWS envt variables setup                             
 AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'us-east-1')                         
@@ -273,15 +273,9 @@ optional arguments:
 
 Also the reports are then verified and updated in the relevant spreadsheets in the [__`probable-vulnerabilities`__](https://github.com/dipanjanS/openshift-probable-vulnerabilities/tree/djsarkar-dev/probable-vulnerabilities) directory.
 
+<br>
 
+## Detailed Video Walkthrough
+If you are interested in seeing a detailed video walkthrough with audio about the project and how to perform model inference and triage, you can check out the following video too.
 
-
-
-
-
-
-
-
-
-
-[Setup and Triage Instructions](https://drive.google.com/a/redhat.com/file/d/1IMw8qH9H_JY3jvgU8P4a11p8eDsYY3cF/view?usp=sharing)
+[![](https://i.imgur.com/Tt0ItW0.gif)](https://drive.google.com/file/d/1m9Tqpc_g9HQATpqx0Ot-LhcY28vNkdvA/view)
