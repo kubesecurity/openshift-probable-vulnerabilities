@@ -15,3 +15,5 @@ if __name__ == '__main__':
     _logger.info('Uploading Saved Model Assets to S3 Bucket')
     aws.s3_upload_folder(folder_path='./models/model_assets/gokube-phase1-jun19',
                          s3_bucket_obj=s3_bucket, prefix='model_assets')
+    aws.s3_upload_folder(folder_path='./models/model_assets/gokube-phase2',
+                         s3_bucket_obj=s3_bucket, prefix='model_assets')
