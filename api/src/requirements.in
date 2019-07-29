@@ -1,0 +1,3 @@
+flask-migrate
+psycopg2
+simplejson

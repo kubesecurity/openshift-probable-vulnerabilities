@@ -1,0 +1,138 @@
+swagger: '2.0'
+info:
+  title: Go CVEs API
+  version: '0.1'
+basePath: /api/v1/
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /updatecve:
+    post:
+      tags:
+        - Update CVE
+      summary: update probable CVEs
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: data
+          description: feedback data for probable cves
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateCVEArray'
+      responses:
+        '200':
+          schema:
+            $ref: "#/definitions/UpdateResponse"
+          description: CVEs updated
+        '400':
+          description: Bad request from the client
+        '500':
+          description: Internal server error
+  /getcve:
+    get:
+      tags:
+        - Get CVE
+      summary: Get CVEs for a given date interval
+      parameters:
+        - in: query
+          name: start-date
+          type: string
+          required: true
+          description: start date of the interval in dd-mm-yyyy format
+        - in: query
+          name: end-date
+          type: string
+          required: true
+          description: end date of the interval in dd-mm-yyyy format
+      responses:
+        '200':
+          schema:
+            $ref: "#/definitions/ProbableCVEArray"
+          description: Probable CVEs for the given date interval
+        '400':
+          description: Bad request from the client
+        '404':
+          description: Data not found
+        '500':
+          description: Internal server error
+definitions:
+  ProbableCVE:
+    title: Probable CVEs
+    description: Probable CVEs
+    properties:
+      id:
+        type: string
+      cve_id:
+        type: string
+      ecosystem:
+        type: string
+      cause_type:
+        type: string
+      cause_id:
+        type: integer
+        description: id of issue, pr, commit that caused this CVE
+      cve_date:
+        type: string
+      confidence_score:
+        type: number
+      identified_date:
+        type: string
+      review_comments:
+        type: string
+      review_status:
+        type: integer
+        description: 0 means not reviewed, 1 means reviewed
+      is_cve:
+        type: integer
+        description: 0 for not a cve, 1 means a cve
+      is_triaged_internally:
+        type: integer
+        description: 0 for not triaged internally, 1 means triaged
+      last_updated_at:
+        type: string
+      reviewed_by:
+        type: string
+  ProbableCVEArray:
+    title: Probable CVEs in Array
+    description: Probable CVEs in Array
+    type: object
+    properties:
+      probablecves:
+        type: array
+        items:
+          $ref: '#/definitions/ProbableCVE'
+  UpdateCVE:
+    title: CVE Details
+    description: CVE Details
+    properties:
+      id:
+        type: string
+      is_cve:
+        type: integer
+        description: 0 is for no cve, 1 is for a cve
+      review_comments:
+        type: string
+      reviewed_by:
+        type: string
+        description: Your mail id
+  UpdateCVEArray:
+    title: CVE Details Array
+    description: CVE Details Array
+    properties:
+      probablecves:
+        type: array
+        items:
+          $ref: '#/definitions/UpdateCVE'
+  UpdateResponse:
+    title: Update response
+    description: response for the update cve call
+    properties:
+      message:
+        type: string
+
+
