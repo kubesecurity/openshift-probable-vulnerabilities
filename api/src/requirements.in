@@ -1,3 +1,5 @@
 flask-migrate
 psycopg2
 simplejson
+flask-swagger-ui
+pyyaml
