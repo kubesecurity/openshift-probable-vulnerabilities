@@ -182,7 +182,7 @@ paths:
         500:
           description: Internal server error
           content: {}
-  /getcve:
+  /getcves:
     get:
       tags:
       - Get CVE
@@ -219,7 +219,7 @@ paths:
 components:
   schemas:
     ProbableCVE:
-      title: Probable CVEs
+      title: Probable CVE
       type: object
       properties:
         id:

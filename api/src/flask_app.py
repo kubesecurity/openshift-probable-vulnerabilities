@@ -7,7 +7,7 @@ import os
 
 app = Flask(__name__)
 SWAGGER_URL = '/api/v1/docs'
-API_URL = 'swagger/swagger.yaml'
+API_URL = '/swagger/swagger.yaml'
 swagger_yaml = load(open(API_URL, 'r'), Loader=Loader)
 swaggerui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,

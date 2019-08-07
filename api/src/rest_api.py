@@ -76,16 +76,18 @@ def get_id():
     return flask.jsonify(id=query.id), 200
 
 
-@app.route('/api/v1/getcve')
+@app.route('/api/v1/getcves')
 def get_cve():
     start_date = flask.request.args.get('start-date')
     end_date = flask.request.args.get('end-date')
     response = ProbableCVE.query.filter(and_(cast(ProbableCVE.identified_date, Date) <= end_date,
-                                             cast(ProbableCVE.identified_date, Date) >= start_date)).first_or_404(
-        description='CVE with the given criteria not found'
+                                             cast(ProbableCVE.identified_date, Date) >= start_date)).all_or_404(
+        description='CVEs with the given criteria not found'
     )
-    response = response.__dict__
-    del response['_sa_instance_state']
+    for idx, cve in enumerate(response):
+        cve_dict = cve.__dict__
+        del cve_dict['_sa_instance_state']
+        response[idx] = cve_dict
     return flask.jsonify(response), 200
 
 
