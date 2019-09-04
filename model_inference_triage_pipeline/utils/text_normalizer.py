@@ -86,12 +86,46 @@ def pre_process_document(document):
     return document
 
 
+def pre_process_document_bert(document):
+    # strip HTML
+    document = strip_html_tags(document)
+
+    # remove URLS
+    document = remove_urls(document)
+
+    # remove checklists
+    document = remove_checklists(document)
+
+    # lower case
+    document = document.lower()
+
+    # remove extra newlines (often might be present in really noisy text)
+    document = document.translate(document.maketrans("\n\t\r", "   "))
+
+    # remove accented characters
+    document = remove_accented_chars(document)
+
+    # remove extra whitespace
+    document = re.sub(' +', ' ', document)
+    document = document.strip()
+
+    return document
+
+
 def parallel_preprocessing(idx, doc, total_docs):
     if idx % 5000 == 0 or idx == (total_docs - 1):
         _logger.info('{}: working on doc num: {}'.format(threading.current_thread().name,
                                                          idx)
                      )
     return pre_process_document(doc)
+
+
+def parallel_preprocessing_bert(idx, doc, total_docs):
+    if idx % 5000 == 0 or idx == (total_docs - 1):
+        _logger.info('{}: working on doc num: {}'.format(threading.current_thread().name,
+                                                         idx)
+                     )
+    return pre_process_document_bert(doc)
 
 
 def pre_process_documents_parallel(documents):
@@ -101,6 +135,20 @@ def pre_process_documents_parallel(documents):
     ex = futures.ThreadPoolExecutor(max_workers=None)
     _logger.info('Text Pre-processing: starting')
     norm_descriptions_map = ex.map(parallel_preprocessing,
+                                   [record[0] for record in docs_input],
+                                   [record[1] for record in docs_input],
+                                   [record[2] for record in docs_input])
+    norm_descriptions = list(norm_descriptions_map)
+    return norm_descriptions
+
+
+def pre_process_documents_parallel_bert(documents):
+    total_docs = len(documents)
+    docs_input = [[idx, doc, total_docs] for idx, doc in enumerate(documents)]
+
+    ex = futures.ThreadPoolExecutor(max_workers=None)
+    _logger.info('Text Pre-processing: starting')
+    norm_descriptions_map = ex.map(parallel_preprocessing_bert,
                                    [record[0] for record in docs_input],
                                    [record[1] for record in docs_input],
                                    [record[2] for record in docs_input])
