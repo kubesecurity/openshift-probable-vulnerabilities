@@ -1,7 +1,12 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=Warning)
 from utils import cloud_constants as cc
 from utils import bq_client_helper as bq_helper
 from utils import text_normalizer as tn
 from utils import aws_utils as aws
+from utils import bert_text_processor as btp
+from models import bert_cve_classifier as bcvec
 from models import security_dl_classifier as sdc
 from models import cve_dl_classifier as cdc
 
@@ -13,13 +18,57 @@ import logging
 import gc
 import os
 import argparse
+import textwrap
+import tensorflow as tf
 
 # Initial setup no need to change anything
-parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--days-since-yday", type=int,
+parser = argparse.ArgumentParser(prog='python',
+                                 description=textwrap.dedent('''\
+                    This script can be used to run our
+                    AI models for probable vulnerability predictions.
+                    Check usage patterns below'''),
+                                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 epilog=textwrap.dedent('''\
+         Usage patterns for inference script
+         -----------------------------------
+            The -days flag should be used with number of prev days data you want to pull
+
+            1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru 
+            2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert 
+            3. CPU inference (not recommended for BERT): python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru  
+         '''))
+
+parser.add_argument("-days", "--days-since-yday", type=int, default=7,
                     help="The number of days worth of data to retrieve from GitHub including yesterday")
+
+parser.add_argument("-eco", "--eco-system", type=str, default="openshift",
+                    choices=["openshift", "knative", "kubevirt"],
+                    help="The eco-system to monitor")
+
+parser.add_argument("-device", "--compute-device", type=str, default="gpu",
+                    choices=["gpu", "cpu", "GPU", "CPU"],
+                    help="[Not implemented should work automatically] The backend device to run the AI models on - GPU or CPU")
+
+parser.add_argument("-sec-model", "--security-filter-model", type=str, default="gru",
+                    choices=["gru", "GRU"],
+                    help="The AI Model to use for security filtering - Model 1")
+
+parser.add_argument("-cve-model", "--probable-cve-model", type=str, default="gru",
+                    choices=["gru", "GRU", "bert", "BERT"],
+                    help="The AI Model to use for probable CVE predictions - Model 2")   
+
+parser.add_argument("-s3-upload", "--s3-upload-cves", type=bool, default=False,
+                    choices=[False, True],
+                    help="Uploads inference CSVs to S3 bucket - turn off since bucket works only with my account for now (write access") 
+
 args = parser.parse_args()
+
 DAYS_SINCE_YDAY = args.days_since_yday
+ECO_SYSTEM = args.eco_system.lower()
+COMPUTE_DEVICE = args.compute_device.lower()
+SEC_MODEL_TYPE = args.security_filter_model.lower()
+CVE_MODEL_TYPE = args.probable_cve_model.lower()
+S3_UPLOAD = args.s3_upload_cves
 
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
@@ -29,7 +78,12 @@ _logger = daiquiri.getLogger(__name__)
 _logger.info('----- BQ CLIENT SETUP FOR GETTING GITHUB BQ DATA -----')
 
 GH_BQ_CLIENT = bq_helper.create_github_bq_client()
-REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.GOKUBE_REPO_LIST)
+if ECO_SYSTEM == 'openshift':
+    REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.GOKUBE_REPO_LIST)
+elif ECO_SYSTEM == 'knative':
+    REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.KNATIVE_REPO_LIST)
+elif ECO_SYSTEM == 'kubevirt':
+    REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.KUBEVIRT_REPO_LIST)
 
 _logger.info('\n')
 
@@ -224,6 +278,8 @@ df = pd.concat([issues_df, prs_df], axis=0, sort=False,
                ignore_index=True).reset_index(drop=True)
 df = df[cols]
 
+df.to_csv('test_data_models.csv', index=False)
+
 if df.empty:
     _logger.warn('Nothing to predict today :)')
 else:
@@ -233,94 +289,204 @@ else:
     columns = ['title', 'body']
     df.drop(columns, inplace=True, axis=1)
 
-    _logger.info('Text Pre-processing Issue/PR Descriptions')
-    df['norm_description'] = tn.pre_process_documents_parallel(
-        documents=df['description'].values)
-    df.drop(['description'], inplace=True, axis=1)
+    if CVE_MODEL_TYPE == 'gru':
+        _logger.info('Text Pre-processing Issue/PR Descriptions')
+        df['norm_description'] = tn.pre_process_documents_parallel(
+            documents=df['description'].values)
+        df.drop(['description'], inplace=True, axis=1)
 
-    _logger.info('Setting Default CVE and Security Flags')
-    df['security_model_flag'] = 0
-    df['cve_model_flag'] = 0
+        _logger.info('Setting Default CVE and Security Flags')
+        df['security_model_flag'] = 0
+        df['cve_model_flag'] = 0
 
-    _logger.info('\n')
+        _logger.info('\n')
 
 
-    # ======= STARTING MODEL INFERENCE ========
-    _logger.info('----- STARTING MODEL INFERENCE -----')
-    _logger.info('Loading Security Model')
-    sc = sdc.SecurityClassifier(embedding_size=300, max_length=1000, max_features=800000,
-                                tokenizer_path=cc.SEC_MODEL_TOKENIZER_PATH,
-                                model_weights_path=cc.SEC_MODEL_WEIGHTS_PATH)
-    sc.build_model_architecture()
-    sc.load_model_weights()
-    sc_model = sc.get_model()
+        # ======= STARTING MODEL INFERENCE ========
+        _logger.info('----- STARTING MODEL INFERENCE -----')
+        _logger.info('Loading Security Model')
+        sc = sdc.SecurityClassifier(embedding_size=300, max_length=1000, max_features=800000,
+                                    tokenizer_path=cc.P1GRU_SEC_MODEL_TOKENIZER_PATH,
+                                    model_weights_path=cc.P1GRU_SEC_MODEL_WEIGHTS_PATH)
+        sc.build_model_architecture()
+        sc.load_model_weights()
+        sc_model = sc.get_model()
 
-    _logger.info('Preparing data for security model inference')
-    security_encoded_docs = sc.prepare_inference_data(
-        df['norm_description'].tolist())
-    _logger.info('Total Security Docs Encoded: {n}'.format(
-        n=len(security_encoded_docs)))
-    sec_doc_lengths = np.array([len(np.nonzero(item)[0])
-                                for item in security_encoded_docs])
-    _logger.info('Removing bad docs with low tokens')
-    sec_doc_idx = np.argwhere(sec_doc_lengths >= 5).ravel()
-    filtered_security_encoded_docs = security_encoded_docs[sec_doc_idx]
-    _logger.info('Filtered Security Docs Encoded: {n}'.format(
-        n=len(filtered_security_encoded_docs)))
+        _logger.info('Preparing data for security model inference')
+        security_encoded_docs = sc.prepare_inference_data(
+            df['norm_description'].tolist())
+        _logger.info('Total Security Docs Encoded: {n}'.format(
+            n=len(security_encoded_docs)))
+        sec_doc_lengths = np.array([len(np.nonzero(item)[0])
+                                    for item in security_encoded_docs])
+        _logger.info('Removing bad docs with low tokens')
+        sec_doc_idx = np.argwhere(sec_doc_lengths >= 5).ravel()
+        filtered_security_encoded_docs = security_encoded_docs[sec_doc_idx]
+        _logger.info('Filtered Security Docs Encoded: {n}'.format(
+            n=len(filtered_security_encoded_docs)))
 
-    _logger.info('Making predictions for probable security issues')
-    sec_pred_probs = sc_model.predict(
-        filtered_security_encoded_docs, batch_size=1024, verbose=0)
-    sec_pred_probsr = sec_pred_probs.ravel()
-    sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
-    _logger.info('Updating Security Model predictions in dataset')
-    df.loc[df.index.isin(sec_doc_idx), 'security_model_flag'] = sec_pred_labels
+        _logger.info('Making predictions for probable security issues')
+        sec_pred_probs = sc_model.predict(
+            filtered_security_encoded_docs, batch_size=1024, verbose=0)
+        sec_pred_probsr = sec_pred_probs.ravel()
+        sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
+        _logger.info('Updating Security Model predictions in dataset')
+        df.loc[df.index.isin(sec_doc_idx), 'security_model_flag'] = sec_pred_labels
 
-    _logger.info('Teardown security model')
-    del sc
-    del sc_model
-    gc.collect()
+        _logger.info('Teardown security model')
+        del sc
+        del sc_model
+        gc.collect()
 
-    _logger.info('\n')
-    _logger.info('Loading CVE Model')
-    cvc = cdc.CVEClassifier(embedding_size=300, max_length=1000, max_features=600000,
-                            tokenizer_path=cc.CVE_MODEL_TOKENIZER_PATH,
-                            model_weights_path=cc.CVE_MODEL_WEIGHTS_PATH)
-    cvc.build_model_architecture()
-    cvc.load_model_weights()
-    cc_model = cvc.get_model()
+        _logger.info('\n')
+        _logger.info('Loading CVE Model')
+        cvc = cdc.CVEClassifier(embedding_size=300, max_length=1000, max_features=600000,
+                                tokenizer_path=cc.P1GRU_CVE_MODEL_TOKENIZER_PATH,
+                                model_weights_path=cc.P1GRU_CVE_MODEL_WEIGHTS_PATH)
+        cvc.build_model_architecture()
+        cvc.load_model_weights()
+        cc_model = cvc.get_model()
 
-    _logger.info('Keeping track of probable security issue rows')
-    subset_df = df[df['security_model_flag'] == 1]
-    prob_security_df_rowidx = np.array(subset_df.index)
+        _logger.info('Keeping track of probable security issue rows')
+        subset_df = df[df['security_model_flag'] == 1]
+        prob_security_df_rowidx = np.array(subset_df.index)
 
-    cve_encoded_docs = cvc.prepare_inference_data(
-        subset_df['norm_description'].tolist())
-    _logger.info('Total CVE Docs Encoded: {n}'.format(
-        n=len(cve_encoded_docs)))
-    cve_doc_lengths = np.array([len(np.nonzero(item)[0])
-                                for item in cve_encoded_docs])
-    _logger.info('Removing bad docs with low tokens')
-    cve_doc_idx = np.argwhere(cve_doc_lengths >= 10).ravel()
-    filtered_cve_encoded_docs = cve_encoded_docs[cve_doc_idx]
-    _logger.info('Filtered CVE Docs Encoded: {n}'.format(
-        n=len(filtered_cve_encoded_docs)))
 
-    _logger.info('Making predictions for probable CVE issues')
-    cve_pred_probs = cc_model.predict(
-        filtered_cve_encoded_docs, batch_size=1024, verbose=0)
-    cve_pred_probsr = cve_pred_probs.ravel()
-    cve_pred_labels = [1 if prob > 0.3 else 0 for prob in cve_pred_probsr]
-    _logger.info('Updating CVE Model predictions in dataset')
-    prob_cve_idxs = prob_security_df_rowidx[cve_doc_idx]
-    df.loc[df.index.isin(prob_cve_idxs),
-           'cve_model_flag'] = cve_pred_labels
-    _logger.info('\n')
 
-    _logger.info('Teardown CVE model')
-    del cvc
-    del cc_model
-    gc.collect()
+
+        cve_encoded_docs = cvc.prepare_inference_data(
+            subset_df['norm_description'].tolist())
+        _logger.info('Total CVE Docs Encoded: {n}'.format(
+            n=len(cve_encoded_docs)))
+        cve_doc_lengths = np.array([len(np.nonzero(item)[0])
+                                    for item in cve_encoded_docs])
+        _logger.info('Removing bad docs with low tokens')
+        cve_doc_idx = np.argwhere(cve_doc_lengths >= 10).ravel()
+        filtered_cve_encoded_docs = cve_encoded_docs[cve_doc_idx]
+        _logger.info('Filtered CVE Docs Encoded: {n}'.format(
+            n=len(filtered_cve_encoded_docs)))
+
+        _logger.info('Making predictions for probable CVE issues')
+        cve_pred_probs = cc_model.predict(
+            filtered_cve_encoded_docs, batch_size=1024, verbose=0)
+        cve_pred_probsr = cve_pred_probs.ravel()
+        cve_pred_labels = [1 if prob > 0.3 else 0 for prob in cve_pred_probsr]
+        _logger.info('Updating CVE Model predictions in dataset')
+        prob_cve_idxs = prob_security_df_rowidx[cve_doc_idx]
+        df.loc[df.index.isin(prob_cve_idxs),
+            'cve_model_flag'] = cve_pred_labels
+        _logger.info('Teardown CVE model')
+        _logger.info('\n')
+
+        del cvc
+        del cc_model
+        gc.collect()
+
+
+    if CVE_MODEL_TYPE == 'bert':
+
+        _logger.info('Text Pre-processing Issue/PR Descriptions')
+        df['norm_description'] = tn.pre_process_documents_parallel(
+            documents=df['description'].values)
+        # df.drop(['description'], inplace=True, axis=1)
+
+        _logger.info('Setting Default CVE and Security Flags')
+        df['security_model_flag'] = 0
+        df['cve_model_flag'] = 0
+
+        _logger.info('\n')
+        _logger.info('----- STARTING MODEL INFERENCE -----')
+        _logger.info('Loading Security Model')
+        sc = sdc.SecurityClassifier(embedding_size=300, max_length=1000, max_features=800000,
+                                    tokenizer_path=cc.P1GRU_SEC_MODEL_TOKENIZER_PATH,
+                                    model_weights_path=cc.P1GRU_SEC_MODEL_WEIGHTS_PATH)
+        sc.build_model_architecture()
+        sc.load_model_weights()
+        sc_model = sc.get_model()
+
+        _logger.info('Preparing data for security model inference')
+        security_encoded_docs = sc.prepare_inference_data(
+            df['norm_description'].tolist())
+        _logger.info('Total Security Docs Encoded: {n}'.format(
+            n=len(security_encoded_docs)))
+        sec_doc_lengths = np.array([len(np.nonzero(item)[0])
+                                    for item in security_encoded_docs])
+        _logger.info('Removing bad docs with low tokens')
+        sec_doc_idx = np.argwhere(sec_doc_lengths >= 5).ravel()
+        filtered_security_encoded_docs = security_encoded_docs[sec_doc_idx]
+        _logger.info('Filtered Security Docs Encoded: {n}'.format(
+            n=len(filtered_security_encoded_docs)))
+
+        _logger.info('Making predictions for probable security issues')
+        sec_pred_probs = sc_model.predict(
+            filtered_security_encoded_docs, batch_size=1024, verbose=0)
+        sec_pred_probsr = sec_pred_probs.ravel()
+        sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
+        _logger.info('Updating Security Model predictions in dataset')
+        df.loc[df.index.isin(sec_doc_idx), 'security_model_flag'] = sec_pred_labels
+
+        _logger.info('Teardown security model')
+        del sc
+        del sc_model
+        gc.collect()
+
+        _logger.info('\n')
+
+        _logger.info('Keeping track of probable security issue rows')
+        subset_df = df[df['security_model_flag'] == 1]
+        prob_security_df_rowidx = np.array(subset_df.index)
+
+        sess = tf.Session()
+        BERT_MAX_SEQ_LEN = 512
+
+        _logger.info('Loading CVE Model')
+        bc = bcvec.BERTClassifier(bert_model_path=cc.BASE_BERT_UNCASED_PATH, 
+                          max_seq_length=BERT_MAX_SEQ_LEN)
+        bc.build_model_architecture()   
+
+        subset_df['norm_description'] = tn.pre_process_documents_parallel_bert(
+                                            documents=subset_df['description'].values) 
+        cve_encoded_docs = subset_df['norm_description'].values
+        _logger.info('Total CVE Docs Encoded: {n}'.format(
+            n=len(cve_encoded_docs)))
+        cve_doc_lengths = np.array([len(doc.split(' ')) for doc in cve_encoded_docs])
+        _logger.info('Removing bad docs with low tokens')
+        cve_doc_idx = np.argwhere(cve_doc_lengths >= 10).ravel()
+        filtered_cve_encoded_docs = cve_encoded_docs[cve_doc_idx]
+        _logger.info('Filtered CVE Docs Encoded: {n}'.format(
+            n=len(filtered_cve_encoded_docs)))
+
+        _logger.info('BERT text processing and feature engineering')
+        btp_obj = btp.BertTextProcessor(tf_session=sess, 
+                                  bert_model_path=cc.BASE_BERT_UNCASED_PATH, 
+                                  max_seq_length=BERT_MAX_SEQ_LEN)
+        btp_obj.create_bert_tokenizer()
+        btp_obj.convert_text_to_input_examples(filtered_cve_encoded_docs)
+        btp_obj.convert_examples_to_features()
+
+        _logger.info('Making predictions for probable CVE issues')
+        btp.initialize_vars(sess)
+        bc.load_model_weights(model_weights_path=cc.P2BERT_CVE_MODEL_WEIGHTS_PATH)
+        
+        cve_pred_probs = bc.model_estimator.predict(x=[btp_obj.input_ids, 
+                                                       btp_obj.input_masks, 
+                                                       btp_obj.segment_ids],
+                                                    batch_size=256,
+                                                    verbose=1)
+        cve_pred_probsr = cve_pred_probs.ravel()
+        cve_pred_labels = [1 if prob > 0.5 else 0 for prob in cve_pred_probsr]
+        from collections import Counter
+        print(Counter(cve_pred_labels))
+        _logger.info('Updating CVE Model predictions in dataset')
+        prob_cve_idxs = prob_security_df_rowidx[cve_doc_idx]
+        df.loc[df.index.isin(prob_cve_idxs),
+            'cve_model_flag'] = cve_pred_labels
+        _logger.info('Teardown CVE model')
+        _logger.info('\n')
+            
+        del btp_obj
+        del bc
+        gc.collect()
 
 
     # ======= PREPARING PROBABLE SECURITY & CVE DATASETS ========
@@ -330,13 +496,17 @@ else:
     NEW_TRIAGE_SUBDIR = '-'.join([START_TIME.format('YYYYMMDD'),
                                   END_TIME.format('YYYYMMDD')])
     NEW_DIR_PATH = os.path.join(BASE_TRIAGE_DIR, NEW_TRIAGE_SUBDIR)
+    if CVE_MODEL_TYPE == 'gru':
+        FILE_PREFIX = 'gru_model_inference_'
+    elif CVE_MODEL_TYPE == 'bert':
+        FILE_PREFIX = 'bert_model_inference_'
 
     MODEL_INFERENCE_DATASET = os.path.join(
-        NEW_DIR_PATH, 'model_inference_full_output_' + NEW_TRIAGE_SUBDIR + '.csv')
+        NEW_DIR_PATH, FILE_PREFIX + 'full_output_' + NEW_TRIAGE_SUBDIR + '.csv')
     PROBABLE_SEC_CVE_DATASET = os.path.join(
-        NEW_DIR_PATH, 'probable_security_and_cves_' + NEW_TRIAGE_SUBDIR + '.csv')
+        NEW_DIR_PATH, FILE_PREFIX + 'probable_security_and_cves_' + NEW_TRIAGE_SUBDIR + '.csv')
     PROBABLE_CVE_DATASET = os.path.join(
-        NEW_DIR_PATH, 'probable_cves_' + NEW_TRIAGE_SUBDIR + '.csv')
+        NEW_DIR_PATH, FILE_PREFIX + 'probable_cves_' + NEW_TRIAGE_SUBDIR + '.csv')
     if not os.path.exists(NEW_DIR_PATH):
         _logger.info(
             'Creating New Model Inference Directory: {}'.format(NEW_DIR_PATH))
@@ -345,7 +515,8 @@ else:
         _logger.info(
             'Using Existing Model Inference Directory: {}'.format(NEW_DIR_PATH))
 
-    df.drop(['norm_description'], inplace=True, axis=1)
+    df.drop(['norm_description', 'description'], 
+            inplace=True, errors='ignore', axis=1)
     df['triage_is_security'] = 0
     df['triage_is_cve'] = 0
     df['triage_feedback_comments'] = ''
@@ -368,14 +539,14 @@ else:
         PROBABLE_CVE_DATASET, index=False)
     _logger.info('\n')
 
+    if S3_UPLOAD:
+        # ======= UPLOADING INFERENCE DATASETS TO S3 BUCKET ========
+        _logger.info('----- UPLOADING INFERENCE DATASETS TO S3 BUCKET  -----')
+        s3_obj = aws.S3_OBJ
+        bucket_name = cc.S3_BUCKET_NAME
+        s3_bucket = s3_obj.Bucket(bucket_name)
 
-    # ======= UPLOADING INFERENCE DATASETS TO S3 BUCKET ========
-    _logger.info('----- UPLOADING INFERENCE DATASETS TO S3 BUCKET  -----')
-    s3_obj = aws.S3_OBJ
-    bucket_name = cc.S3_BUCKET_NAME
-    s3_bucket = s3_obj.Bucket(bucket_name)
-
-    _logger.info('Uploading Saved Model Assets to S3 Bucket')
-    aws.s3_upload_folder(folder_path=NEW_DIR_PATH,
-                         s3_bucket_obj=s3_bucket, prefix='triaged_datasets')
+        _logger.info('Uploading Saved Model Assets to S3 Bucket')
+        aws.s3_upload_folder(folder_path=NEW_DIR_PATH,
+                            s3_bucket_obj=s3_bucket, prefix='triaged_datasets')
     _logger.info('All done!')

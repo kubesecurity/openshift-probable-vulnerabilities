@@ -19,7 +19,7 @@ def create_github_bq_client():
 
 
 def get_gokube_trackable_repos(repo_dir):
-    gh_repo_links = open('../../data/go-cves/golang-repo-list.txt').readlines()
+    gh_repo_links = open(repo_dir).readlines()
     gh_repo_links = np.array([item.strip('\n').strip()
                               for item in gh_repo_links])
 
