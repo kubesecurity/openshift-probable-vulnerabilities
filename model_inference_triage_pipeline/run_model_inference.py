@@ -502,11 +502,11 @@ else:
         FILE_PREFIX = 'bert_model_inference_'
 
     MODEL_INFERENCE_DATASET = os.path.join(
-        NEW_DIR_PATH, FILE_PREFIX + 'full_output_' + NEW_TRIAGE_SUBDIR + '.csv')
+        NEW_DIR_PATH, FILE_PREFIX + 'full_output_' + NEW_TRIAGE_SUBDIR + ECO_SYSTEM + '.csv')
     PROBABLE_SEC_CVE_DATASET = os.path.join(
-        NEW_DIR_PATH, FILE_PREFIX + 'probable_security_and_cves_' + NEW_TRIAGE_SUBDIR + '.csv')
+        NEW_DIR_PATH, FILE_PREFIX + 'probable_security_and_cves_' + NEW_TRIAGE_SUBDIR + ECO_SYSTEM + '.csv')
     PROBABLE_CVE_DATASET = os.path.join(
-        NEW_DIR_PATH, FILE_PREFIX + 'probable_cves_' + NEW_TRIAGE_SUBDIR + '.csv')
+        NEW_DIR_PATH, FILE_PREFIX + 'probable_cves_' + NEW_TRIAGE_SUBDIR + ECO_SYSTEM + '.csv')
     if not os.path.exists(NEW_DIR_PATH):
         _logger.info(
             'Creating New Model Inference Directory: {}'.format(NEW_DIR_PATH))
