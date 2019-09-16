@@ -7,12 +7,10 @@ Note: Please don't add keys directly here, refer to environment variables
 import os
 
 # Please make sure you have your AWS envt variables setup
-AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'us-east-1')
+AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'ap-south-1')
 AWS_S3_ACCESS_KEY_ID = os.environ.get('AWS_S3_ACCESS_KEY_ID', '')
 AWS_S3_SECRET_ACCESS_KEY = os.environ.get('AWS_S3_SECRET_ACCESS_KEY', '')
-
-# you don't need to change this
-S3_BUCKET_NAME = 'dsarkar-dev-gokube-triage'
+S3_BUCKET_NAME = os.environ.get('AWS_S3_BUCKET_NAME', 'aagshah-dev-gokube-triage')
 
 # Please set the following to point to your BQ auth credentials JSON
 BIGQUERY_CREDENTIALS_FILEPATH = '../../auth/bq_key.json'
