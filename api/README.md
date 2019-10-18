@@ -2,7 +2,7 @@
 
 ### Basic structure
 
-Code lies in `src/` directory. Openshift template lies in `openshift/` directory and swagger specification lies in `swagger/` directory.
+Code lies in `src/` directory. Openshift template lies in `openshift/` directory and swagger specification lies in `swagger/` directory. The schema diagram for the database that backs up the API is present in `diagram/` directory.
 
 ### How to run the API on your local machine
 
