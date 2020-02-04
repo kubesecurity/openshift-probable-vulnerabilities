@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: probable-vulnerabilities-inference
+metadata:
+  name: probable-vulnerabilities-inference
+  annotations:
+    description: probable-vulnerabilities-inference
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      service: bert-cpu-inference
+    name: bert-cpu-inference
+  spec:
+    replicas: "${{REPLICAS}}"
+    selector:
+      service: bert-cpu-inference
+    template:
+      metadata:
+        labels:
+          service: bert-cpu-inference
+      spec:
+        volumes:
+        - name: credentials
+          secret:
+            secretName: google-services-secret
+            items:
+            -  key: google-services.json
+               path: gcloud/google-services.json
+        containers:
+        - env:
+          - name: FLASK_LOGGING_LEVEL
+            value: ${FLASK_LOGGING_LEVEL}
+          - name: BIGQUERY_CREDENTIALS_FILEPATH
+            value: "/etc/credentials/gcloud/google-services.json"
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: aws_access_key_id
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: aws_secret_access_key
+          volumeMounts:
+            - name: credentials
+              mountPath: "/etc/credentials/"
+              readOnly: true
+          image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+          name: openshift-probable-vulnerabilities
+          ports:
+          - containerPort: ${{API_SERVICE_PORT}}
+          # TODO: Define liveness probe and readiness probe.
+          resources:
+            requests:
+              cpu: ${CPU_REQUEST}
+              memory: ${MEMORY_REQUEST}
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      service: bert-cpu-inference
+    name: bert-cpu-inference
+  spec:
+    ports:
+    - port: ${{API_SERVICE_PORT}}
+      name: "${API_SERVICE_PORT}"
+      targetPort: ${{API_SERVICE_PORT}}
+      protocol: TCP
+    selector:
+      service: bert-cpu-inference
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: bert-cpu-inference
+  spec:
+    host: ${CVE_API_HOSTNAME}
+    to:
+      kind: Service
+      name: bert-cpu-inference
+
+parameters:
+- description: A hostname where the API should be exposed (will be auto-generated if empty)
+  displayName: API hostname
+  required: false
+  name: CVE_API_HOSTNAME
+  value: "bert-cpu-inference"
+
+- description: CPU request
+  displayName: CPU request
+  required: true
+  name: CPU_REQUEST
+  value: "125m"
+
+- description: CPU limit
+  displayName: CPU limit
+  required: true
+  name: CPU_LIMIT
+  value: "4"
+
+- description: Memory request
+  displayName: Memory request
+  required: true
+  name: MEMORY_REQUEST
+  value: "256Mi"
+
+- description: Memory limit
+  displayName: Memory limit
+  required: true
+  name: MEMORY_LIMIT
+  value: "1Gi"
+
+- description: Docker registry where the image is
+  displayName: Docker registry
+  required: true
+  name: DOCKER_REGISTRY
+  value: "docker.io"
+
+- description: Docker image to use
+  displayName: Docker image
+  required: true
+  name: DOCKER_IMAGE
+  value: "avgupta/bert-inference"
+
+- description: Image tag
+  displayName: Image tag
+  required: true
+  name: IMAGE_TAG
+  value: "latest"
+
+- description: Number of deployment replicas
+  displayName: Number of deployment replicas
+  required: true
+  name: REPLICAS
+  value: "1"
+
+- description: Port Number
+  displayName: Port Number
+  required: true
+  name: API_SERVICE_PORT
+  value: "5000"
+
+- description: "Flask logging level (see: https://docs.python.org/3/library/logging.html#levels)"
+  displayName: Flask logging level
+  required: false
+  name: FLASK_LOGGING_LEVEL
+  value: "INFO"
