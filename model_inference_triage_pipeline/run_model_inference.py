@@ -278,7 +278,7 @@ df = pd.concat([issues_df, prs_df], axis=0, sort=False,
                ignore_index=True).reset_index(drop=True)
 df = df[cols]
 
-df.to_csv('test_data_models.csv', index=False)
+# df.to_csv('/data_assets/test_data_models.csv', index=False)
 
 if df.empty:
     _logger.warn('Nothing to predict today :)')
@@ -494,7 +494,7 @@ else:
     # ======= PREPARING PROBABLE SECURITY & CVE DATASETS ========
     _logger.info('----- PREPARING PROBABLE SECURITY & CVE DATASETS  -----')
 
-    BASE_TRIAGE_DIR = './triaged_datasets'
+    BASE_TRIAGE_DIR = '/data_assets/triaged_datasets'
     NEW_TRIAGE_SUBDIR = '-'.join([START_TIME.format('YYYYMMDD'),
                                   END_TIME.format('YYYYMMDD')])
     NEW_DIR_PATH = os.path.join(BASE_TRIAGE_DIR, NEW_TRIAGE_SUBDIR)
