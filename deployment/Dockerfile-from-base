@@ -1,0 +1,9 @@
+FROM docker.io/avgupta/bert-inference-base:latest
+
+ADD model_inference_triage_pipeline /model_inference_triage_pipeline
+ADD model_inference_triage_pipeline/utils/data_assets/ /data_assets/
+ADD deployment/entrypoint.sh /entrypoint.sh
+
+RUN mkdir /model_assets/ && chmod +x /entrypoint.sh && chmod -R 0777 /data_assets/ /model_assets/
+
+ENTRYPOINT ["/entrypoint.sh"]
