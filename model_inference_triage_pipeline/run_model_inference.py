@@ -384,7 +384,9 @@ else:
 
 
     if CVE_MODEL_TYPE == 'bert':
-
+        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME),
+                               'model_assets',
+                               '/model_inference_triage_pipeline/models/')
         _logger.info('Text Pre-processing Issue/PR Descriptions')
         df['norm_description'] = tn.pre_process_documents_parallel(
             documents=df['description'].values)
@@ -548,5 +550,5 @@ else:
 
         _logger.info('Uploading Saved Model Assets to S3 Bucket')
         aws.s3_upload_folder(folder_path=NEW_DIR_PATH,
-                            s3_bucket_obj=s3_bucket, prefix='triaged_datasets')
+                            s3_bucket_obj=s3_bucket, prefix='triaged_datasets_openshift')
     _logger.info('All done!')
