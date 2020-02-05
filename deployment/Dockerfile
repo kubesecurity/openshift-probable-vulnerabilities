@@ -9,6 +9,7 @@ RUN python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ADD model_inference_triage_pipeline /model_inference_triage_pipeline
+ADD model_inference_triage_pipeline/utils/data_assets/ /data_assets/
 ADD deployment/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
