@@ -12,7 +12,7 @@ ADD model_inference_triage_pipeline /model_inference_triage_pipeline
 ADD model_inference_triage_pipeline/utils/data_assets/ /data_assets/
 ADD deployment/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
+RUN chmod -R 0777 /data_assets/ /model_assets/
 RUN pip install -r /model_inference_triage_pipeline/requirements.txt
 
 ENTRYPOINT ["/entrypoint.sh"]
