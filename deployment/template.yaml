@@ -11,16 +11,16 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
-      service: bert-cpu-inference
-    name: bert-cpu-inference
+      service: bert-inference
+    name: bert-inference
   spec:
     replicas: "${{REPLICAS}}"
     selector:
-      service: bert-cpu-inference
+      service: bert-inference
     template:
       metadata:
         labels:
-          service: bert-cpu-inference
+          service: bert-inference
       spec:
         volumes:
         - name: credentials
@@ -56,17 +56,19 @@ objects:
           # TODO: Define liveness probe and readiness probe.
           resources:
             requests:
+              nvidia.com/gpu: 1
               cpu: ${CPU_REQUEST}
               memory: ${MEMORY_REQUEST}
             limits:
+              nvidia.com/gpu: 1
               cpu: ${CPU_LIMIT}
               memory: ${MEMORY_LIMIT}
 - apiVersion: v1
   kind: Service
   metadata:
     labels:
-      service: bert-cpu-inference
-    name: bert-cpu-inference
+      service: bert-inference
+    name: bert-inference
   spec:
     ports:
     - port: ${{API_SERVICE_PORT}}
@@ -74,23 +76,23 @@ objects:
       targetPort: ${{API_SERVICE_PORT}}
       protocol: TCP
     selector:
-      service: bert-cpu-inference
+      service: bert-inference
 - apiVersion: v1
   kind: Route
   metadata:
-    name: bert-cpu-inference
+    name: bert-inference
   spec:
     host: ${CVE_API_HOSTNAME}
     to:
       kind: Service
-      name: bert-cpu-inference
+      name: bert-inference
 
 parameters:
 - description: A hostname where the API should be exposed (will be auto-generated if empty)
   displayName: API hostname
   required: false
   name: CVE_API_HOSTNAME
-  value: "bert-cpu-inference"
+  value: "bert-inference"
 
 - description: CPU request
   displayName: CPU request
@@ -114,7 +116,7 @@ parameters:
   displayName: Memory limit
   required: true
   name: MEMORY_LIMIT
-  value: "1Gi"
+  value: "32Gi"
 
 - description: Docker registry where the image is
   displayName: Docker registry
