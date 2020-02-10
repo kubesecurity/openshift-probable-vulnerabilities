@@ -1,5 +1,5 @@
 # Based on the RHEL-8 UBI
-FROM docker.io/nvidia/cuda:10.1-devel-ubi8
+FROM docker.io/nvidia/cuda:10.0-cudnn7-devel-ubi7
 LABEL MAINTAINER="Avishkar Gupta <avgupta@redhat.com>"
 
 RUN dnf install -y git python3 && python3 -m pip install --upgrade pip virtualenv setuptools
