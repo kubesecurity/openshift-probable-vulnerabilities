@@ -28,7 +28,7 @@ class LAMBOptimizer(Optimizer):
     def __init__(self, lr=0.001, beta_1=0.9, beta_2=0.999,
                  epsilon=1e-6, weight_decay=0., exclude_from_weight_decay=None,
                  **kwargs):
-        super(LAMBOptimizer, self).__init__(**kwargs)
+        super().__init__(name='LambOptimizer', **kwargs)
         with K.name_scope(self.__class__.__name__):
             self.iterations = K.variable(0, dtype='int64', name='iterations')
             self.lr = K.variable(lr, dtype='float32', name='lr')
@@ -103,3 +103,23 @@ class LAMBOptimizer(Optimizer):
             param_name = m.group(1)
         return param_name
 
+    def get_config(self):
+        config = {
+            'lr': float(K.get_value(self.lr)),
+            'beta_1': float(K.get_value(self.beta_1)),
+            'beta_2': float(K.get_value(self.beta_2)),
+            'decay': float(K.get_value(self.decay)),
+            'epsilon': self.epsilon,
+            'weight_decay': self.weight_decay
+        }
+
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    @property
+    def weights(self):
+        return self.weights
+
+    @weights.setter
+    def weights(self, value):
+        self.weights = value

@@ -421,7 +421,7 @@ else:
 
         _logger.info('Making predictions for probable security issues')
         sec_pred_probs = sc_model.predict(
-            filtered_security_encoded_docs, batch_size=1024, verbose=0)
+            filtered_security_encoded_docs, batch_size=64, verbose=0)
         sec_pred_probsr = sec_pred_probs.ravel()
         sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
         _logger.info('Updating Security Model predictions in dataset')
@@ -473,7 +473,7 @@ else:
         cve_pred_probs = bc.model_estimator.predict(x=[btp_obj.input_ids, 
                                                        btp_obj.input_masks, 
                                                        btp_obj.segment_ids],
-                                                    batch_size=256,
+                                                    batch_size=64,
                                                     verbose=1)
         cve_pred_probsr = cve_pred_probs.ravel()
         cve_pred_labels = [1 if prob > 0.5 else 0 for prob in cve_pred_probsr]
@@ -494,7 +494,7 @@ else:
     # ======= PREPARING PROBABLE SECURITY & CVE DATASETS ========
     _logger.info('----- PREPARING PROBABLE SECURITY & CVE DATASETS  -----')
 
-    BASE_TRIAGE_DIR = '/data_assets/triaged_datasets'
+    BASE_TRIAGE_DIR = os.environ.get('BASE_TRIAGE_DIR', '/data_assets/triaged_datasets')
     NEW_TRIAGE_SUBDIR = '-'.join([START_TIME.format('YYYYMMDD'),
                                   END_TIME.format('YYYYMMDD')])
     NEW_DIR_PATH = os.path.join(BASE_TRIAGE_DIR, NEW_TRIAGE_SUBDIR)
@@ -502,7 +502,9 @@ else:
         FILE_PREFIX = 'gru_model_inference_'
     elif CVE_MODEL_TYPE == 'bert':
         FILE_PREFIX = 'bert_model_inference_'
-
+    else:
+        _logger.info("No Valid model type specified, defaulting to BERT model.")
+        FILE_PREFIX = 'bert_model_inference_'
     MODEL_INFERENCE_DATASET = os.path.join(
         NEW_DIR_PATH, FILE_PREFIX + 'full_output_' + NEW_TRIAGE_SUBDIR + '_' + ECO_SYSTEM + '.csv')
     PROBABLE_SEC_CVE_DATASET = os.path.join(

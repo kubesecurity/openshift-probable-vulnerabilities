@@ -1,11 +1,11 @@
-# Based on the RHEL-8 UBI
+# Based on the RHEL-7 UBI
 FROM docker.io/nvidia/cuda:10.0-cudnn7-devel-ubi7
 LABEL MAINTAINER="Avishkar Gupta <avgupta@redhat.com>"
 
-RUN dnf install -y git python3 && python3 -m pip install --upgrade pip virtualenv setuptools
+RUN yum install -y git rh-python36 && source /opt/rh/rh-python36/enable && python -m pip install --upgrade pip virtualenv setuptools
 
 ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV
+RUN source /opt/rh/rh-python36/enable && python -m virtualenv --python=$(which python) $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Helps speedup docker build time.
