@@ -1,4 +1,5 @@
 FROM docker.io/avgupta/bert-inference-base:latest
+LABEL MAINTAINER "Avishkar Gupta <avgupta@redhat.com>"
 
 ADD model_inference_triage_pipeline /model_inference_triage_pipeline
 ADD model_inference_triage_pipeline/utils/data_assets/ /data_assets/
