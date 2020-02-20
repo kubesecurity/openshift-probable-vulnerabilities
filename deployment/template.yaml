@@ -56,11 +56,11 @@ objects:
           # TODO: Define liveness probe and readiness probe.
           resources:
             requests:
-              nvidia.com/gpu: 1
+                # nvidia.com/gpu: 1
               cpu: ${CPU_REQUEST}
               memory: ${MEMORY_REQUEST}
             limits:
-              nvidia.com/gpu: 1
+                # nvidia.com/gpu: 1
               cpu: ${CPU_LIMIT}
               memory: ${MEMORY_LIMIT}
 - apiVersion: v1
@@ -104,7 +104,7 @@ parameters:
   displayName: CPU limit
   required: true
   name: CPU_LIMIT
-  value: "4"
+  value: "2"
 
 - description: Memory request
   displayName: Memory request
@@ -116,7 +116,7 @@ parameters:
   displayName: Memory limit
   required: true
   name: MEMORY_LIMIT
-  value: "32Gi"
+  value: "6Gi"
 
 - description: Docker registry where the image is
   displayName: Docker registry
