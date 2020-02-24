@@ -10,7 +10,8 @@ import os
 AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'ap-south-1')
 AWS_S3_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
 AWS_S3_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
-S3_BUCKET_NAME = os.environ.get('AWS_S3_BUCKET_NAME', 'avgupta-dev-gokube-triage')
+S3_BUCKET_NAME_MODEL = os.environ.get('AWS_BUCKET_NAME_MODEL', 'avgupta-dev-gokube-triage')
+S3_BUCKET_NAME_INFERENCE = os.environ.get('AWS_BUCKET_NAME_INFERENCE', 'avgupta-dev-gokube-triage')
 
 # Please set the following to point to your BQ auth credentials JSON
 BIGQUERY_CREDENTIALS_FILEPATH = os.environ.get('BIGQUERY_CREDENTIALS_FILEPATH', '../../auth/bq_key.json')

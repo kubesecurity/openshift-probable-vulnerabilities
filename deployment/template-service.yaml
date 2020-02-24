@@ -33,6 +33,12 @@ objects:
         - env:
           - name: FLASK_LOGGING_LEVEL
             value: ${FLASK_LOGGING_LEVEL}
+          - name: AWS_BUCKET_NAME_INFERENCE
+            value: ${AWS_BUCKET_NAME_INFERENCE}
+          - name: AWS_BUCKET_NAME_MODEL
+            value: ${AWS_BUCKET_NAME_MODEL}
+          - name: DAYS
+            value: ${DAYS}
           - name: BIGQUERY_CREDENTIALS_FILEPATH
             value: "/etc/credentials/gcloud/google-services.json"
           - name: AWS_ACCESS_KEY_ID
@@ -153,3 +159,21 @@ parameters:
   required: false
   name: FLASK_LOGGING_LEVEL
   value: "INFO"
+
+- description: "The number of days for which the inference has to be run."
+  displayName: Days for which report needs to be run
+  required: True
+  name: DAYS
+  value: 14
+
+- displayName: "Model bucket Name"
+  description: Name of the bucket which contains the model
+  required: True
+  name: AWS_BUCKET_NAME_MODEL
+  value: "avgupta-dev-gokube-triage"
+
+- description: "Bucket to which the results of the inference will be uploaded"
+  displayName: Inference bucket name
+  required: True
+  name: AWS_BUCKET_NAME_INFERENCE
+  value: "avgupta-dev-gokube-triage"

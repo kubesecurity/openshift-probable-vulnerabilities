@@ -74,7 +74,7 @@ You can now proceed with the deployment.
 - Openshift Template- DeploymentConfig/Service/Route (template-service.yaml)
 - Openshift Template- Openshift Job (template-job.yaml)
 - Openshift Template- Openshift CronJob (template-cronjob.yaml)
-
+- Configurable variables in template
 
 ### entrypoint.sh
 
@@ -116,6 +116,12 @@ case where the inference is not run periodically rather on-demand when required.
 This is the template that defines an Openshift CronJob and should be used when periodic inference execution is
 required instead of ad-hoc. Adjust the schedule accordingly, the one hardcoded currently is to run
 the job at 12 A.M. (00:00) daily.
+
+### Configurable variables in template
+
+- AWS_BUCKET_NAME_MODEL - This is the bucket from which the models will be read.
+- AWS_BUCKET_NAME_INFERENCE - This is the bucket to which the inference results will be written
+- DAYS - The number of days for which the job has to be run
 
 ## Deployment on a cluster with only CPU nodes
 

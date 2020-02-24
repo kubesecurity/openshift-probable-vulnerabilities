@@ -384,7 +384,7 @@ else:
 
 
     if CVE_MODEL_TYPE == 'bert':
-        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME),
+        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL),
                                'model_assets',
                                '/')
         _logger.info('Text Pre-processing Issue/PR Descriptions')
@@ -547,7 +547,7 @@ else:
         # ======= UPLOADING INFERENCE DATASETS TO S3 BUCKET ========
         _logger.info('----- UPLOADING INFERENCE DATASETS TO S3 BUCKET  -----')
         s3_obj = aws.S3_OBJ
-        bucket_name = cc.S3_BUCKET_NAME
+        bucket_name = cc.S3_BUCKET_NAME_INFERENCE
         s3_bucket = s3_obj.Bucket(bucket_name)
 
         _logger.info('Uploading Saved Model Assets to S3 Bucket')
