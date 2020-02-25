@@ -87,7 +87,7 @@ The Dockerfile uses the CUDA 10.0 (only version of CUDA comaptible with Tensorfl
 Nvidia. We are using Tensorflow 1.15 as it has both a CPU and GPU based backends in the same package so the same
 container image will work for both the deployment strategies. If the Pod is scheduled with a GPU resource
 (more on that in the GPU deployment section) then the CUDA libraries will "discover" the GPU resource and
-processing will move to the GPU, otherwise everything proceeds as normal on the GPU.
+processing will move to the GPU, otherwise everything proceeds as normal on the CPU.
 
 To change the Dockerfile, ensure that the CUDA version and the Tensorflow version that are used are compatible.
 

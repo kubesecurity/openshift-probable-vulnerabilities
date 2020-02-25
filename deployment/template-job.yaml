@@ -111,18 +111,18 @@ parameters:
 
 - description: "The number of days for which the inference has to be run."
   displayName: Days for which report needs to be run
-  required: True
+  required: true
   name: DAYS
   value: "14"
 
 - displayName: "Model bucket Name"
   description: Name of the bucket which contains the model
-  required: True
+  required: true
   name: AWS_BUCKET_NAME_MODEL
   value: "avgupta-dev-gokube-triage"
 
 - description: "Bucket to which the results of the inference will be uploaded"
   displayName: Inference bucket name
-  required: True
+  required: true
   name: AWS_BUCKET_NAME_INFERENCE
   value: "avgupta-dev-gokube-triage"

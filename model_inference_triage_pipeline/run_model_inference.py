@@ -2,6 +2,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=Warning)
 from utils import cloud_constants as cc
+from utils import model_constants as mc
 from utils import bq_client_helper as bq_helper
 from utils import text_normalizer as tn
 from utils import aws_utils as aws
@@ -327,7 +328,7 @@ else:
 
         _logger.info('Making predictions for probable security issues')
         sec_pred_probs = sc_model.predict(
-            filtered_security_encoded_docs, batch_size=1024, verbose=0)
+            filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC, verbose=0)
         sec_pred_probsr = sec_pred_probs.ravel()
         sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
         _logger.info('Updating Security Model predictions in dataset')
@@ -368,7 +369,7 @@ else:
 
         _logger.info('Making predictions for probable CVE issues')
         cve_pred_probs = cc_model.predict(
-            filtered_cve_encoded_docs, batch_size=1024, verbose=0)
+            filtered_cve_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_CVE_GRU, verbose=0)
         cve_pred_probsr = cve_pred_probs.ravel()
         cve_pred_labels = [1 if prob > 0.3 else 0 for prob in cve_pred_probsr]
         _logger.info('Updating CVE Model predictions in dataset')
@@ -421,7 +422,7 @@ else:
 
         _logger.info('Making predictions for probable security issues')
         sec_pred_probs = sc_model.predict(
-            filtered_security_encoded_docs, batch_size=64, verbose=0)
+            filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC_BERT, verbose=0)
         sec_pred_probsr = sec_pred_probs.ravel()
         sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
         _logger.info('Updating Security Model predictions in dataset')
@@ -473,7 +474,7 @@ else:
         cve_pred_probs = bc.model_estimator.predict(x=[btp_obj.input_ids, 
                                                        btp_obj.input_masks, 
                                                        btp_obj.segment_ids],
-                                                    batch_size=64,
+                                                    batch_size=mc.BATCH_SIZE_PROB_CVE_BERT,
                                                     verbose=1)
         cve_pred_probsr = cve_pred_probs.ravel()
         cve_pred_labels = [1 if prob > 0.5 else 0 for prob in cve_pred_probsr]
