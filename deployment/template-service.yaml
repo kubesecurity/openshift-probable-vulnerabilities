@@ -31,8 +31,6 @@ objects:
                path: gcloud/google-services.json
         containers:
         - env:
-          - name: FLASK_LOGGING_LEVEL
-            value: ${FLASK_LOGGING_LEVEL}
           - name: AWS_BUCKET_NAME_INFERENCE
             value: ${AWS_BUCKET_NAME_INFERENCE}
           - name: AWS_BUCKET_NAME_MODEL
@@ -153,12 +151,6 @@ parameters:
   required: true
   name: API_SERVICE_PORT
   value: "5000"
-
-- description: "Flask logging level (see: https://docs.python.org/3/library/logging.html#levels)"
-  displayName: Flask logging level
-  required: false
-  name: FLASK_LOGGING_LEVEL
-  value: "INFO"
 
 - description: "The number of days for which the inference has to be run."
   displayName: Days for which report needs to be run
