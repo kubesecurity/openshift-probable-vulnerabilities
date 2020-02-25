@@ -165,12 +165,32 @@ If you want to add GPU nodes to an already running cluster, follow [this tutoria
 ### Installing the operators
 
 In order to use GPU as a resource we require the [special-resource-operator](https://github.com/openshift-psap/special-resource-operator)
-to be installed on the cluster, which in turn depends on the [cluster-nfd-operator](https://github.com/openshift/cluster-nfd-operator) operator. This should
-be a one click install through operatorhub but if that fails clone these repositories, make sure you have
+to be installed on the cluster, which in turn depends on the [cluster-nfd-operator](https://github.com/openshift/cluster-nfd-operator) operator.
+This should be a one click install through operatorhub but if that fails clone these repositories, make sure you have
 a valid `KUBECONFIG` environment set and run `make deploy` and do a manual deployment of the master branch. I
 suggest using a Makefile based deployment from the repositories as the one click install requires a manual 
 creation of the `special resource` and the `node-feature-discovery` objects.
 
+- Cluster nfd operator installation(Tested with Openshift 4.3, nfd operator version: c4015b8)
+ - First you need to build an image of the operator's source code in the master branch after making the appropriate
+   changes to the Makefile. ex:
+   ```Makefile
+   -REGISTRY       ?= quay.io
+   -ORG            ?= zvonkok
+   -TAG            ?= $(shell git branch | grep \* | cut -d ' ' -f2)
+   +REGISTRY       ?= docker.io
+   +ORG            ?= avgupta
+   +TAG            ?= master
+   IMAGE          ?= ${REGISTRY}/${ORG}/cluster-nfd-operator:${TAG}
+   NAMESPACE      ?= openshift-nfd
+   PULLPOLICY     ?= IfNotPresent
+   ```
+ - The build the image that you have now specified, ex:
+ ```bash
+    docker build -t avgupta/cluster-nfd-operator:master -f Dockerfile .
+ ```
+ - Followed by deployment with `make deploy`.
+ 
 If all goes according to plan, you will have an `openshift-sro` and `openshift-nfd` namespace
 with a bunch of running(and not crashlooping) pods. The `openshift-sro` namespace takes a while to get
 populated, basically don't try anything before the `exporter` pods come up.
