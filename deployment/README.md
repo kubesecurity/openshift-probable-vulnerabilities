@@ -12,9 +12,11 @@ that can be employed to run an inference job on Openshift.
     - [Openshift Template- DeploymentConfig/Service/Route (template-service.yaml)](#openshift-template--deploymentconfigserviceroute)
     - [Openshift Template- Openshift Job (template-job.yaml)](#openshift-template--openshift-job)
     - [Openshift Template- Openshift CronJob (template-cronjob.yaml)](#openshift-template--openshift-cronjob)
+    - [Configurable variables in template](#configurable-variables-in-template)
 - [Deployment on a cluster with only CPU nodes](#deployment-on-a-cluster-with-only-cpu-nodes)
 - [Setup of a GPU based cluster](#setup-of-a-gpu-based-cluster)
 - [Deployment on a cluster with GPU nodes](#deployment-on-a-cluster-with-gpu-nodes)
+- [Inference Result Storage](#inference-result-storage)
 
 ## Initial Setup of secrets
 
@@ -200,3 +202,8 @@ oc process <templatename.yaml> | oc create -f -
 The Pod should be in `ContainerCreating` state for a while and then move on to the `running` state. If the GPU
 resource has not been properly registered the pod will remain un-schedulable and `oc get events` should
 get you the appropriate error message from the namespace.
+
+## Inference Result Storage
+
+The inference results will be stored in the appropriately configured AWS bucket if the keys have appropriate write permission.
+See: [Configurable variables](#configurable-variables-in-template).
