@@ -165,7 +165,7 @@ If you want to add GPU nodes to an already running cluster, follow [this tutoria
 ### Installing the operators
 
 In order to use GPU as a resource we require the [special-resource-operator](https://github.com/openshift-psap/special-resource-operator)
-to be installed on the cluster, which in turn depends on the [node-feature-discovery](https://github.com/openshift/node-feature-discovery) operator. This should
+to be installed on the cluster, which in turn depends on the [cluster-nfd-operator](https://github.com/openshift/cluster-nfd-operator) operator. This should
 be a one click install through operatorhub but if that fails clone these repositories, make sure you have
 a valid `KUBECONFIG` environment set and run `make deploy` and do a manual deployment of the master branch. I
 suggest using a Makefile based deployment from the repositories as the one click install requires a manual 
