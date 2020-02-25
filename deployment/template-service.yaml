@@ -164,7 +164,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: True
   name: DAYS
-  value: 14
+  value: "14"
 
 - displayName: "Model bucket Name"
   description: Name of the bucket which contains the model
