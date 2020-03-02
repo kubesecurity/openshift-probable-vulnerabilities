@@ -19,7 +19,6 @@ class BertLayer(tf.keras.layers.Layer):
         self.bert_path = bert_model_path
         super(BertLayer, self).__init__(**kwargs)
 
-        
     def build(self, input_shape):
         print('Loading Base BERT Model')
         self.bert = tf_hub.Module(self.bert_path,
@@ -57,8 +56,7 @@ class BertLayer(tf.keras.layers.Layer):
 
         super(BertLayer, self).build(input_shape)
 
-        
-    def call(self, inputs):
+    def call(self, inputs, *args, **kwargs):
         print('Constructing Base BERT architecture')
         inputs = [K.cast(x, dtype="int32") for x in inputs]
         input_ids, input_mask, segment_ids = inputs
@@ -71,7 +69,6 @@ class BertLayer(tf.keras.layers.Layer):
                            as_dict=True)["pooled_output"]
 
         return pooled
-
     
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.output_size) 

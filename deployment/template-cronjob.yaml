@@ -1,0 +1,136 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: probable-vulnerabilities-inference
+metadata:
+  name: probable-vulnerabilities-inference
+  annotations:
+    description: probable-vulnerabilities-inference
+objects:
+- apiVersion: batch/v1beta1
+  kind: CronJob
+  metadata:
+    name: bert-inference
+  spec:
+    # Run everyday at midnight.
+    schedule: "0 0 */1 * *"
+    startingDeadlineSeconds: 200
+    successfulJobsHistoryLimit: 5
+    failedJobsHistoryLimit: 5
+    concurrencyPolicy: "Forbid"
+    replicas: "${{REPLICAS}}"
+    jobTemplate:
+      spec:
+        template:
+          metadata:
+            labels:
+              parent: bert-inference
+          spec:
+            restartPolicy: OnFailure
+            volumes:
+            - name: credentials
+              secret:
+                secretName: google-services-secret
+                items:
+                -  key: google-services.json
+                   path: gcloud/google-services.json
+            containers:
+            - env:
+              - name: AWS_BUCKET_NAME_INFERENCE
+                value: ${AWS_BUCKET_NAME_INFERENCE}
+              - name: AWS_BUCKET_NAME_MODEL
+                value: ${AWS_BUCKET_NAME_MODEL}
+              - name: DAYS
+                value: ${DAYS}
+              - name: BIGQUERY_CREDENTIALS_FILEPATH
+                value: "/etc/credentials/gcloud/google-services.json"
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: aws
+                    key: aws_access_key_id
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: aws
+                    key: aws_secret_access_key
+              volumeMounts:
+                - name: credentials
+                  mountPath: "/etc/credentials/"
+                  readOnly: true
+              image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+              name: openshift-probable-vulnerabilities
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+                limits:
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
+
+parameters:
+- description: CPU request
+  displayName: CPU request
+  required: true
+  name: CPU_REQUEST
+  value: "125m"
+
+- description: CPU limit
+  displayName: CPU limit
+  required: true
+  name: CPU_LIMIT
+  value: "4"
+
+- description: Memory request
+  displayName: Memory request
+  required: true
+  name: MEMORY_REQUEST
+  value: "256Mi"
+
+- description: Memory limit
+  displayName: Memory limit
+  required: true
+  name: MEMORY_LIMIT
+  value: "8Gi"
+
+- description: Docker registry where the image is
+  displayName: Docker registry
+  required: true
+  name: DOCKER_REGISTRY
+  value: "docker.io"
+
+- description: Docker image to use
+  displayName: Docker image
+  required: true
+  name: DOCKER_IMAGE
+  value: "avgupta/bert-inference"
+
+- description: Image tag
+  displayName: Image tag
+  required: true
+  name: IMAGE_TAG
+  value: "latest"
+
+- description: Number of deployment replicas
+  displayName: Number of deployment replicas
+  required: true
+  name: REPLICAS
+  value: "1"
+
+- description: "The number of days for which the inference has to be run."
+  displayName: Days for which report needs to be run
+  required: true
+  name: DAYS
+  value: "14"
+
+- displayName: "Model bucket Name"
+  description: Name of the bucket which contains the model
+  required: true
+  name: AWS_BUCKET_NAME_MODEL
+  value: "avgupta-dev-gokube-triage"
+
+- description: "Bucket to which the results of the inference will be uploaded"
+  displayName: Inference bucket name
+  required: true
+  name: AWS_BUCKET_NAME_INFERENCE
+  value: "avgupta-dev-gokube-triage"

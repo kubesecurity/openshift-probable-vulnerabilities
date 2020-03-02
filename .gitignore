@@ -114,3 +114,6 @@ triaged_datasets/
 
 # model assets
 model_assets/
+
+# Kubernetes secrets
+*/*-secret.yaml

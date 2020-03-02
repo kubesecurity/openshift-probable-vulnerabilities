@@ -2,6 +2,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=Warning)
 from utils import cloud_constants as cc
+from utils import model_constants as mc
 from utils import bq_client_helper as bq_helper
 from utils import text_normalizer as tn
 from utils import aws_utils as aws
@@ -278,7 +279,7 @@ df = pd.concat([issues_df, prs_df], axis=0, sort=False,
                ignore_index=True).reset_index(drop=True)
 df = df[cols]
 
-df.to_csv('test_data_models.csv', index=False)
+# df.to_csv('/data_assets/test_data_models.csv', index=False)
 
 if df.empty:
     _logger.warn('Nothing to predict today :)')
@@ -327,7 +328,7 @@ else:
 
         _logger.info('Making predictions for probable security issues')
         sec_pred_probs = sc_model.predict(
-            filtered_security_encoded_docs, batch_size=1024, verbose=0)
+            filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC, verbose=0)
         sec_pred_probsr = sec_pred_probs.ravel()
         sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
         _logger.info('Updating Security Model predictions in dataset')
@@ -368,7 +369,7 @@ else:
 
         _logger.info('Making predictions for probable CVE issues')
         cve_pred_probs = cc_model.predict(
-            filtered_cve_encoded_docs, batch_size=1024, verbose=0)
+            filtered_cve_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_CVE_GRU, verbose=0)
         cve_pred_probsr = cve_pred_probs.ravel()
         cve_pred_labels = [1 if prob > 0.3 else 0 for prob in cve_pred_probsr]
         _logger.info('Updating CVE Model predictions in dataset')
@@ -384,7 +385,9 @@ else:
 
 
     if CVE_MODEL_TYPE == 'bert':
-
+        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL),
+                               'model_assets',
+                               '/')
         _logger.info('Text Pre-processing Issue/PR Descriptions')
         df['norm_description'] = tn.pre_process_documents_parallel(
             documents=df['description'].values)
@@ -419,7 +422,7 @@ else:
 
         _logger.info('Making predictions for probable security issues')
         sec_pred_probs = sc_model.predict(
-            filtered_security_encoded_docs, batch_size=1024, verbose=0)
+            filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC_BERT, verbose=0)
         sec_pred_probsr = sec_pred_probs.ravel()
         sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
         _logger.info('Updating Security Model predictions in dataset')
@@ -471,7 +474,7 @@ else:
         cve_pred_probs = bc.model_estimator.predict(x=[btp_obj.input_ids, 
                                                        btp_obj.input_masks, 
                                                        btp_obj.segment_ids],
-                                                    batch_size=256,
+                                                    batch_size=mc.BATCH_SIZE_PROB_CVE_BERT,
                                                     verbose=1)
         cve_pred_probsr = cve_pred_probs.ravel()
         cve_pred_labels = [1 if prob > 0.5 else 0 for prob in cve_pred_probsr]
@@ -492,7 +495,7 @@ else:
     # ======= PREPARING PROBABLE SECURITY & CVE DATASETS ========
     _logger.info('----- PREPARING PROBABLE SECURITY & CVE DATASETS  -----')
 
-    BASE_TRIAGE_DIR = './triaged_datasets'
+    BASE_TRIAGE_DIR = os.environ.get('BASE_TRIAGE_DIR', '/data_assets/triaged_datasets')
     NEW_TRIAGE_SUBDIR = '-'.join([START_TIME.format('YYYYMMDD'),
                                   END_TIME.format('YYYYMMDD')])
     NEW_DIR_PATH = os.path.join(BASE_TRIAGE_DIR, NEW_TRIAGE_SUBDIR)
@@ -500,7 +503,9 @@ else:
         FILE_PREFIX = 'gru_model_inference_'
     elif CVE_MODEL_TYPE == 'bert':
         FILE_PREFIX = 'bert_model_inference_'
-
+    else:
+        _logger.info("No Valid model type specified, defaulting to BERT model.")
+        FILE_PREFIX = 'bert_model_inference_'
     MODEL_INFERENCE_DATASET = os.path.join(
         NEW_DIR_PATH, FILE_PREFIX + 'full_output_' + NEW_TRIAGE_SUBDIR + '_' + ECO_SYSTEM + '.csv')
     PROBABLE_SEC_CVE_DATASET = os.path.join(
@@ -543,10 +548,10 @@ else:
         # ======= UPLOADING INFERENCE DATASETS TO S3 BUCKET ========
         _logger.info('----- UPLOADING INFERENCE DATASETS TO S3 BUCKET  -----')
         s3_obj = aws.S3_OBJ
-        bucket_name = cc.S3_BUCKET_NAME
+        bucket_name = cc.S3_BUCKET_NAME_INFERENCE
         s3_bucket = s3_obj.Bucket(bucket_name)
 
         _logger.info('Uploading Saved Model Assets to S3 Bucket')
         aws.s3_upload_folder(folder_path=NEW_DIR_PATH,
-                            s3_bucket_obj=s3_bucket, prefix='triaged_datasets')
+                            s3_bucket_obj=s3_bucket, prefix='triaged_datasets_openshift')
     _logger.info('All done!')
