@@ -117,6 +117,14 @@ def submit_job():
                 }
             },
             {
+                'Name': 'setup - copy data',
+                'ActionOnFailure': 'TERMINATE_CLUSTER',
+                'HadoopJarStep': {
+                    'Jar': 'command-runner.jar',
+                    'Args': ['aws', 's3', 'cp', 's3://avgupta-dev-emr-jobs/GH_complete_labeled_issues_prs - preprocessed.csv', '/home/hadoop/']
+                }
+            },
+            {
                  'Name': 'setup - unzip files',
                  'ActionOnFailure': 'TERMINATE_CLUSTER',
                  'HadoopJarStep': {
