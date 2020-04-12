@@ -15,3 +15,4 @@ numpy
 google-cloud-bigquery
 lxml
 beautifulsoup4
+s3fs
