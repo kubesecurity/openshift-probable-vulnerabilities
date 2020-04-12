@@ -5,6 +5,7 @@ import logging
 import daiquiri
 import numpy as np
 import tensorflow as tf
+import pandas as pd
 
 from models import cve_dl_classifier as cdc
 from models import bert_cve_classifier as bcvec
@@ -19,7 +20,7 @@ daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
 
 
-def run_bert_tensorflow_model(df):
+def run_bert_tensorflow_model(df: pd.DataFrame):
     if cc.S3_MODEL_REFRESH.lower() == "true":
         aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
     _logger.info("Text Pre-processing Issue/PR Descriptions")
@@ -54,7 +55,7 @@ def run_bert_tensorflow_model(df):
     _logger.info(
         "Filtered Security Docs Encoded: {n}".format(n=len(filtered_security_encoded_docs))
     )
-
+    _logger.info("Issue count before security issue filter: {c}".format(c=df.shape[0]))
     _logger.info("Making predictions for probable security issues")
     sec_pred_probs = sc_model.predict(
         filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC_BERT, verbose=0
@@ -74,6 +75,8 @@ def run_bert_tensorflow_model(df):
     _logger.info("Keeping track of probable security issue rows")
     subset_df = df[df["security_model_flag"] == 1]
     prob_security_df_rowidx = np.array(subset_df.index)
+
+    _logger.info("Issue count after security issue filter: {c}".format(c=subset_df.shape[0]))
 
     sess = tf.Session()
     BERT_MAX_SEQ_LEN = 512
@@ -126,6 +129,7 @@ def run_bert_tensorflow_model(df):
     del btp_obj
     del bc
     gc.collect()
+    return df
 
 
 def run_gru_cve_model(df):
@@ -216,3 +220,4 @@ def run_gru_cve_model(df):
     del cvc
     del cc_model
     gc.collect()
+    return df

@@ -9,7 +9,6 @@ import daiquiri
 import pandas as pd
 import torch
 
-from models import run_bert_tensorflow_model, run_gru_cve_model
 from utils import aws_utils as aws
 from utils import bq_client_helper as bq_helper
 from utils import cloud_constants as cc
@@ -42,7 +41,7 @@ def main():
         days_since_yday=DAYS_SINCE_YDAY
     )
     df = get_bq_data_for_inference(ECO_SYSTEM, day_count, date_range)
-    run_inference(df, CVE_MODEL_TYPE)
+    df = run_inference(df, CVE_MODEL_TYPE)
     triage_results_dir = write_output_csv_disk(
         start_time, end_time, cve_model_type=CVE_MODEL_TYPE, ecosystem=ECO_SYSTEM, df=df
     )
@@ -167,7 +166,7 @@ def setup_dates_for_triage(days_since_yday):
     return day_count, start_time, end_time, date_range
 
 
-def get_bq_data_for_inference(ecosystem, day_count, date_range):
+def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
     """Query bigquery to retrieve data that is required for running the inference."""
     # ======= BQ CLIENT SETUP FOR GETTING GITHUB BQ DATA ========
     _logger.info("----- BQ CLIENT SETUP FOR GETTING GITHUB BQ DATA -----")
@@ -350,12 +349,20 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range):
     return df
 
 
-def run_inference(df, CVE_MODEL_TYPE="bert"):
-    if CVE_MODEL_TYPE == "gru":
-        run_gru_cve_model(df)
+def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
+    if "torch" not in CVE_MODEL_TYPE:
+        from models.run_tf_models import run_bert_tensorflow_model, run_gru_cve_model
 
-    if CVE_MODEL_TYPE == "bert":
-        run_bert_tensorflow_model(df)
+        if CVE_MODEL_TYPE == "gru":
+            df = run_gru_cve_model(df)
+
+        if CVE_MODEL_TYPE == "bert":
+            df = run_bert_tensorflow_model(df)
+    else:
+        from models.run_torch_model import run_torch_cve_model_bert
+
+        df = run_torch_cve_model_bert(df)
+    return df
 
 
 def upload_inference_results_s3(triage_results_dir):
