@@ -9,10 +9,9 @@ import daiquiri
 import pandas as pd
 import torch
 
-from utils import aws_utils as aws
 from utils import bq_client_helper as bq_helper
 from utils import cloud_constants as cc
-from utils.disk_utils import write_output_csv_disk
+from utils.storage_utils import write_output_csv
 
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
@@ -42,11 +41,14 @@ def main():
     )
     df = get_bq_data_for_inference(ECO_SYSTEM, day_count, date_range)
     df = run_inference(df, CVE_MODEL_TYPE)
-    triage_results_dir = write_output_csv_disk(
-        start_time, end_time, cve_model_type=CVE_MODEL_TYPE, ecosystem=ECO_SYSTEM, df=df
+    write_output_csv(
+        start_time,
+        end_time,
+        cve_model_type=CVE_MODEL_TYPE,
+        ecosystem=ECO_SYSTEM,
+        df=df,
+        s3_upload=S3_UPLOAD,
     )
-    if S3_UPLOAD:
-        upload_inference_results_s3(triage_results_dir)
 
 
 def get_argument_parser():
@@ -114,7 +116,7 @@ def get_argument_parser():
         "--probable-cve-model",
         type=str,
         default="gru",
-        choices=["gru", "GRU", "bert", "BERT"],
+        choices=["gru", "GRU", "bert", "BERT", "bert_torch", "BERT_TORCH"],
         help="The AI Model to use for probable CVE predictions - Model 2",
     )
 
@@ -350,7 +352,7 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
 
 
 def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
-    if "torch" not in CVE_MODEL_TYPE:
+    if "torch" not in CVE_MODEL_TYPE.lower():
         from models.run_tf_models import run_bert_tensorflow_model, run_gru_cve_model
 
         if CVE_MODEL_TYPE == "gru":
@@ -363,22 +365,6 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
 
         df = run_torch_cve_model_bert(df)
     return df
-
-
-def upload_inference_results_s3(triage_results_dir):
-    """Upload the generated inference results .csv to S3."""
-    # ======= UPLOADING INFERENCE DATASETS TO S3 BUCKET ========
-    _logger.info("----- UPLOADING INFERENCE DATASETS TO S3 BUCKET  -----")
-    s3_obj = aws.S3_OBJ
-    bucket_name = cc.S3_BUCKET_NAME_INFERENCE
-    s3_bucket = s3_obj.Bucket(bucket_name)
-
-    _logger.info("Uploading Saved Model Assets to S3 Bucket")
-    aws.s3_upload_folder(
-        folder_path=triage_results_dir,
-        s3_bucket_obj=s3_bucket,
-        prefix="triaged_datasets_openshift",
-    )
 
 
 if __name__ == "__main__":
