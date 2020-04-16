@@ -10,7 +10,6 @@ import pandas as pd
 from models import cve_dl_classifier as cdc
 from models import bert_cve_classifier as bcvec
 from models import security_dl_classifier as sdc
-from utils import aws_utils as aws
 from utils import bert_text_processor as btp
 from utils import cloud_constants as cc
 from utils import model_constants as mc
@@ -20,9 +19,7 @@ daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
 
 
-def run_bert_tensorflow_model(df: pd.DataFrame):
-    if cc.S3_MODEL_REFRESH.lower() == "true":
-        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
+def run_tensorflow_security_classifier(df: pd.DataFrame):
     _logger.info("Text Pre-processing Issue/PR Descriptions")
     df["norm_description"] = tn.pre_process_documents_parallel(documents=df["description"].values)
     # df.drop(['description'], inplace=True, axis=1)
@@ -69,7 +66,11 @@ def run_bert_tensorflow_model(df: pd.DataFrame):
     del sc
     del sc_model
     gc.collect()
+    return df
 
+
+def run_bert_tensorflow_model(df: pd.DataFrame):
+    df = run_tensorflow_security_classifier(df)
     _logger.info("\n")
 
     _logger.info("Keeping track of probable security issue rows")
@@ -133,54 +134,7 @@ def run_bert_tensorflow_model(df: pd.DataFrame):
 
 
 def run_gru_cve_model(df):
-    _logger.info("Text Pre-processing Issue/PR Descriptions")
-    df["norm_description"] = tn.pre_process_documents_parallel(documents=df["description"].values)
-    df.drop(["description"], inplace=True, axis=1)
-
-    _logger.info("Setting Default CVE and Security Flags")
-    df["security_model_flag"] = 0
-    df["cve_model_flag"] = 0
-
-    # ======= STARTING MODEL INFERENCE ========
-    _logger.info("----- STARTING MODEL INFERENCE -----")
-    _logger.info("Loading Security Model")
-    sc = sdc.SecurityClassifier(
-        embedding_size=300,
-        max_length=1000,
-        max_features=800000,
-        tokenizer_path=cc.P1GRU_SEC_MODEL_TOKENIZER_PATH,
-        model_weights_path=cc.P1GRU_SEC_MODEL_WEIGHTS_PATH,
-    )
-    sc.build_model_architecture()
-    sc.load_model_weights()
-    sc_model = sc.get_model()
-
-    _logger.info("Preparing data for security model inference")
-    security_encoded_docs = sc.prepare_inference_data(df["norm_description"].tolist())
-    _logger.info("Total Security Docs Encoded: {n}".format(n=len(security_encoded_docs)))
-    sec_doc_lengths = np.array([len(np.nonzero(item)[0]) for item in security_encoded_docs])
-    _logger.info("Removing bad docs with low tokens")
-    sec_doc_idx = np.argwhere(sec_doc_lengths >= 5).ravel()
-    filtered_security_encoded_docs = security_encoded_docs[sec_doc_idx]
-    _logger.info(
-        "Filtered Security Docs Encoded: {n}".format(n=len(filtered_security_encoded_docs))
-    )
-
-    _logger.info("Making predictions for probable security issues")
-    sec_pred_probs = sc_model.predict(
-        filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC_GRU, verbose=0
-    )
-    sec_pred_probsr = sec_pred_probs.ravel()
-    sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
-    _logger.info("Updating Security Model predictions in dataset")
-    df.loc[df.index.isin(sec_doc_idx), "security_model_flag"] = sec_pred_labels
-
-    _logger.info("Teardown security model")
-    del sc
-    del sc_model
-    gc.collect()
-
-    _logger.info("\n")
+    df = run_tensorflow_security_classifier(df)
     _logger.info("Loading CVE Model")
     cvc = cdc.CVEClassifier(
         embedding_size=300,

@@ -11,6 +11,7 @@ import torch
 
 from utils import bq_client_helper as bq_helper
 from utils import cloud_constants as cc
+from utils import aws_utils as aws
 from utils.storage_utils import write_output_csv
 
 daiquiri.setup(level=logging.INFO)
@@ -27,6 +28,7 @@ def main():
     DAYS_SINCE_YDAY = args.days_since_yday
     ECO_SYSTEM = args.eco_system.lower()
     COMPUTE_DEVICE = args.compute_device.lower()
+
     if COMPUTE_DEVICE != "cpu":
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
     SEC_MODEL_TYPE = args.security_filter_model.lower()
@@ -36,9 +38,17 @@ def main():
     CVE_MODEL_TYPE = args.probable_cve_model.lower()
     S3_UPLOAD = args.s3_upload_cves
 
-    day_count, start_time, end_time, date_range = setup_dates_for_triage(
-        days_since_yday=DAYS_SINCE_YDAY
-    )
+    if args.start_date == "" and args.end_date == "":
+        day_count, start_time, end_time, date_range = setup_dates_for_triage(
+            days_since_yday=DAYS_SINCE_YDAY
+        )
+    else:
+        start_time = arrow.get(args.start_date, "YYYY-MM-DD")
+        end_time = arrow.get(args.end_date, "YYYY-MM-DD")
+        day_count = (end_time - start_time).days
+        date_range = [
+            dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day", start_time, end_time)
+        ]
     df = get_bq_data_for_inference(ECO_SYSTEM, day_count, date_range)
     df = run_inference(df, CVE_MODEL_TYPE)
     write_output_csv(
@@ -127,10 +137,24 @@ def get_argument_parser():
         default=False,
         choices=[False, True],
         help=(
-            "Uploads inference CSVs to S3 bucket - turn off since bucket works only with my account for now (write"
-            " access"
+            "Uploads inference CSVs to S3 bucket - should have write access to the appropriate S3 bucket."
         ),
     )
+
+    parser.add_argument(
+        "-sd",
+        "--start-date",
+        default="",
+        help="If running for a custom interval, set this and the [end-date] in yyyy-mm-dd format.",
+    )
+
+    parser.add_argument(
+        "-ed",
+        "--end-date",
+        default="",
+        help="If running for a custom interval, set this and the [start-date] in yyyy-mm-dd format.",
+    )
+
     return parser
 
 
@@ -187,7 +211,6 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
         # Returning 0 because this isn't a "HARD" error.
         sys.exit(0)
 
-    setup_dates_for_triage(day_count)
     # ======= BQ QUERY PARAMS SETUP FOR GETTING GITHUB BQ DATA ========
     _logger.info("----- BQ QUERY PARAMS SETUP FOR GETTING GITHUB BQ DATA -----")
 
@@ -352,6 +375,9 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
 
 
 def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
+    if cc.S3_MODEL_REFRESH.lower() == "true":
+        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
+
     if "torch" not in CVE_MODEL_TYPE.lower():
         from models.run_tf_models import run_bert_tensorflow_model, run_gru_cve_model
 
@@ -362,8 +388,10 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
             df = run_bert_tensorflow_model(df)
     else:
         from models.run_torch_model import run_torch_cve_model_bert
+        from models.run_tf_models import run_tensorflow_security_classifier
 
-        df = run_torch_cve_model_bert(df)
+        # Re-use the GRU based security/non-security classifier then pipe its output to the new BERT model.
+        df = run_torch_cve_model_bert(run_tensorflow_security_classifier(df))
     return df
 
 

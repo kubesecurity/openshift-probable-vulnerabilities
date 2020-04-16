@@ -19,7 +19,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     new_triage_results_dir = os.path.join(base_triage_dir, new_triage_subdir)
     if cve_model_type == "gru":
         file_prefix = "gru_model_inference_"
-    elif cve_model_type == "bert":
+    elif cve_model_type.lower().contains("bert"):
         file_prefix = "bert_model_inference_"
     else:
         _logger.info("No Valid model type specified, defaulting to BERT model.")

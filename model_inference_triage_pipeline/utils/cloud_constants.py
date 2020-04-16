@@ -50,4 +50,8 @@ P2BERT_CVE_MODEL_WEIGHTS_PATH = os.environ.get(
     "/model_assets/gokube-phase2/saved_models/bert_cve75_weights-ep:02-trn_loss:0.172-trn_acc:0.957-val_loss:0.164-val_acc:0.978.h5",
 )
 
+P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH = os.environ.get(
+    "P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH", "/model_assets/gokube-phase2/pytorch_cve_warmup/",
+)
+
 S3_MODEL_REFRESH = os.environ.get("S3_MODEL_REFRESH", "True")
