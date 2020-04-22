@@ -41,7 +41,7 @@ class BertTorchCVEClassifier:
         input_tensor = self._preprocess_data(df)
         _logger.info("Shape of input Tensor: {}".format(input_tensor.shape))
         input_dataset = TensorDataset(input_tensor)
-        dataloader = DataLoader(input_dataset, batch_size=32)
+        dataloader = DataLoader(input_dataset, batch_size=mc.BATCH_SIZE_PROB_CVE_BERT_TORCH)
         preds = None
         for batch in tqdm(dataloader, desc="Running Inference", ascii=True):
             with torch.no_grad():
