@@ -117,7 +117,7 @@ def submit_job():
                 }
             },
             {
-                'Name': 'setup - copy data',
+                'Name': 'setup - copy data (train)',
                 'ActionOnFailure': 'TERMINATE_CLUSTER',
                 'HadoopJarStep': {
                     'Jar': 'command-runner.jar',
@@ -125,13 +125,30 @@ def submit_job():
                 }
             },
             {
-                'Name': 'setup - copy data',
+                'Name': 'setup - copy data (dev)',
                 'ActionOnFailure': 'TERMINATE_CLUSTER',
                 'HadoopJarStep': {
                     'Jar': 'command-runner.jar',
                     'Args': ['aws', 's3', 'cp', 's3://avgupta-dev-emr-jobs/dev.tsv', '/home/hadoop/']
                 }
             },
+            {
+                'Name': 'setup - copy features - dev',
+                'ActionOnFailure': 'TERMINATE_CLUSTER',
+                'HadoopJarStep': {
+                    'Jar': 'command-runner.jar',
+                    'Args': ['aws', 's3', 'cp', 's3://avgupta-dev-emr-jobs/cached_dev_bert-base-uncased_512_sst-2', '/home/hadoop/']
+                }
+            },
+            {
+                'Name': 'setup - copy features - test',
+                'ActionOnFailure': 'TERMINATE_CLUSTER',
+                'HadoopJarStep': {
+                    'Jar': 'command-runner.jar',
+                    'Args': ['aws', 's3', 'cp', 's3://avgupta-dev-emr-jobs/cached_train_bert-base-uncased_512_sst-2', '/home/hadoop/']
+                }
+            },
+
             {
                  'Name': 'setup - unzip files',
                  'ActionOnFailure': 'TERMINATE_CLUSTER',
@@ -146,24 +163,43 @@ def submit_job():
                 'HadoopJarStep': {
                     'Jar': 'command-runner.jar',
                     'Args': ["python3",
+                             "/home/hadoop/bert_pytorch.py",
                              '--data_dir=/home/hadoop',
-                             '--model_type=bert',
                              '--model_name_or_path=bert-base-uncased',
                              '--task_name=sst-2',
-                             '--output_dir=/home/hadoop/models/model_assets/gokube-phase2/saved_models/pytorch-cve-warmup',
+                             '--output_dir=/mnt2/models/model_assets/gokube-phase2/saved_models/pytorch-cve-warmup',
                              '--max_seq_length=512',
+                             '--cache_dir=/mnt1/cache/',
+                             '--do_lower_case',
                              '--do_train',
                              '--do_eval',
-                             '--do_lower_case',
+                             '--evaluate_during_training',
+                             '--save_steps=2000',
+                             '--learning_rate=5e-5',
+                             '--weight_decay=0.01',
+                             '--per_gpu_train_batch_size=12',
+                             '--num_train_epochs=10.0',
                              '--eval_all_checkpoints',
                              '--overwrite_output_dir']
+                }
+            },
+            {
+                'Name': 'Upload model to S3',
+                'ActionOnFailure': 'TERMINATE_CLUSTER',
+                'HadoopJarStep': {
+                    'Jar': 'command-runner.jar',
+                    'Args': [
+                        "aws", "s3", 'sync', '/mnt2/models/model_assets/gokube-phase2/saved_models/pytorch-cve-warmup',
+                        "s3://avgupta-dev-emr-jobs/pytorch-cve-warmup-{}/".format(strftime("%Y_%m_%d_%H_%M_%S", gmtime())),
+                    ]
                 }
             }
         ],
         Applications=[{'Name': 'TensorFlow'}],
         VisibleToAllUsers=True,
         JobFlowRole='EMR_EC2_DefaultRole',
-        ServiceRole='EMR_DefaultRole'
+        ServiceRole='EMR_DefaultRole',
+#        CustomAmiId='ami-0e2a8509db267f072'
     )
 
     output = {}

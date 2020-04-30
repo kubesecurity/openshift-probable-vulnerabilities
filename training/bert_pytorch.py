@@ -5,17 +5,22 @@ import os
 import random
 
 import numpy as np
+import pandas as pd
 import torch
 from sklearn.metrics import confusion_matrix
+from sklearn.utils.class_weight import compute_class_weight
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm, trange
 from transformers import AdamW, get_linear_schedule_with_warmup
-from transformers import WEIGHTS_NAME, BertConfig, BertForSequenceClassification, BertTokenizer
+from transformers import WEIGHTS_NAME, BertConfig, BertTokenizer
+from bert_model_weighted import BertForSequenceClassification
 from transformers import glue_compute_metrics as compute_metrics
 from transformers import glue_convert_examples_to_features as convert_examples_to_features
 from transformers import glue_output_modes as output_modes
 from transformers import glue_processors as processors
+from typing import List
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +32,6 @@ import csv
 
 csv.field_size_limit(sys.maxsize)
 
-
-class CustomDataset(TensorDataset):
-    def get_tensor(self, index):
-        return self.tensors[index]
-
-
 def set_seed(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -43,13 +42,13 @@ def set_seed(args):
 
 def train(args, train_dataset, model, tokenizer):
     """ Train the model """
-    tb_writer = SummaryWriter()
+    tb_dir = os.path.join(args.output_dir, "runs")
+    if not os.path.exists(tb_dir):
+        os.makedirs(tb_dir)
+    tb_writer = SummaryWriter(log_dir=tb_dir)
 
-    args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
-    #     samples_weight = train_dataset.get_tensor(-1)
+    args.train_batch_size = args.per_gpu_train_batch_size
     train_sampler = RandomSampler(train_dataset)
-    #     del samples_weight
-    #     gc.collect()
     train_dataloader = DataLoader(
         train_dataset, sampler=train_sampler, batch_size=args.train_batch_size
     )
@@ -257,7 +256,6 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
             if evaluate
             else processor.get_train_examples(args.data_dir)
         )
-        logger.info("Example of data is %s", examples[0])
         features = convert_examples_to_features(
             examples,
             tokenizer,
@@ -287,10 +285,17 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     weight = 1.0 / class_sample_count.float()
     samples_weight = torch.tensor([weight[t] for t in all_labels])
 
-    dataset = CustomDataset(
+    dataset = TensorDataset(
         all_input_ids, all_attention_mask, all_token_type_ids, all_labels, samples_weight
     )
     return dataset
+
+
+def get_class_weights(data_dir) -> List:
+    train_samples = pd.read_csv(Path(data_dir).joinpath("train.tsv"), sep="\t")
+    class_weights = compute_class_weight("balanced", np.array([0, 1]), train_samples["label"])
+    class_weights[1] *= 2
+    return class_weights.tolist()
 
 
 def main():
@@ -483,15 +488,16 @@ def main():
         finetuning_task=args.task_name,
         cache_dir=args.cache_dir if args.cache_dir else None,
     )
+    class_weights: List = get_class_weights(args.data_dir)
+    model = model_class.from_pretrained(
+        args.model_name_or_path,
+        config=config,
+        weight=torch.tensor(class_weights).to(device=args.device),
+        cache_dir=args.cache_dir if args.cache_dir else None,
+    )
     tokenizer = tokenizer_class.from_pretrained(
         args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
         do_lower_case=args.do_lower_case,
-        cache_dir=args.cache_dir if args.cache_dir else None,
-    )
-    model = model_class.from_pretrained(
-        args.model_name_or_path,
-        from_tf=bool(".ckpt" in args.model_name_or_path),
-        config=config,
         cache_dir=args.cache_dir if args.cache_dir else None,
     )
 
