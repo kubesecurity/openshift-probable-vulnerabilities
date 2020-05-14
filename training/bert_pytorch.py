@@ -14,7 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm, trange
 from transformers import AdamW, get_linear_schedule_with_warmup
 from transformers import WEIGHTS_NAME, BertConfig, BertTokenizer
-from bert_model_weighted import BertForSequenceClassification
+from models.bert_model_weighted import BertForSequenceClassification
 from transformers import glue_compute_metrics as compute_metrics
 from transformers import glue_convert_examples_to_features as convert_examples_to_features
 from transformers import glue_output_modes as output_modes
@@ -31,6 +31,7 @@ import sys
 import csv
 
 csv.field_size_limit(sys.maxsize)
+
 
 def set_seed(args):
     random.seed(args.seed)

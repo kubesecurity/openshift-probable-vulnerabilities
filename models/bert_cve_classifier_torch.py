@@ -1,19 +1,19 @@
 import logging
-from pathlib import Path
 
 import daiquiri
+import numpy as np
 import pandas as pd
 import torch
 from torch import Tensor
 from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
-from transformers import BertConfig, BertForSequenceClassification, BertTokenizer
+from transformers import BertConfig, BertTokenizer
+from models.bert_model_weighted import BertForSequenceClassification
 from transformers.data.processors import (
     glue_processors as processors,
     glue_output_modes as output_modes,
 )
-from transformers.data.processors.utils import InputExample
-import numpy as np
+
 from utils import model_constants as mc
 
 daiquiri.setup(level=logging.DEBUG)
@@ -35,13 +35,17 @@ class BertTorchCVEClassifier:
         self.processor = processors[mc.TASK_NAME]()
         self.output_mode = output_modes[mc.TASK_NAME]
 
-    def predict(self, df: pd.DataFrame) -> np.array:
+    def predict(
+        self, df: pd.DataFrame, batch_size: int = mc.BATCH_SIZE_PROB_CVE_BERT_TORCH
+    ) -> np.array:
         """Run inference for the new data."""
         # Turn off batch-norm and dropout layers.
+        self.model.eval()
+        batch_size = batch_size or mc.BATCH_SIZE_PROB_CVE_BERT_TORCH
         input_tensor = self._preprocess_data(df)
         _logger.info("Shape of input Tensor: {}".format(input_tensor.shape))
         input_dataset = TensorDataset(input_tensor)
-        dataloader = DataLoader(input_dataset, batch_size=mc.BATCH_SIZE_PROB_CVE_BERT_TORCH)
+        dataloader = DataLoader(input_dataset, batch_size=batch_size)
         preds = None
         for batch in tqdm(dataloader, desc="Running Inference", ascii=True):
             with torch.no_grad():
