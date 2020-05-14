@@ -140,34 +140,6 @@ def submit_job():
                 },
             },
             {
-                "Name": "setup - copy features - dev",
-                "ActionOnFailure": "TERMINATE_CLUSTER",
-                "HadoopJarStep": {
-                    "Jar": "command-runner.jar",
-                    "Args": [
-                        "aws",
-                        "s3",
-                        "cp",
-                        "s3://avgupta-dev-emr-jobs/cached_dev_bert-base-uncased_512_sst-2",
-                        "/home/hadoop/",
-                    ],
-                },
-            },
-            {
-                "Name": "setup - copy features - test",
-                "ActionOnFailure": "TERMINATE_CLUSTER",
-                "HadoopJarStep": {
-                    "Jar": "command-runner.jar",
-                    "Args": [
-                        "aws",
-                        "s3",
-                        "cp",
-                        "s3://avgupta-dev-emr-jobs/cached_train_bert-base-uncased_512_sst-2",
-                        "/home/hadoop/",
-                    ],
-                },
-            },
-            {
                 "Name": "setup - unzip files",
                 "ActionOnFailure": "TERMINATE_CLUSTER",
                 "HadoopJarStep": {
@@ -222,9 +194,8 @@ def submit_job():
         ],
         Applications=[{"Name": "TensorFlow"}],
         VisibleToAllUsers=True,
-        JobFlowRole="EMR_EC2_DefaultRole",
-        ServiceRole="EMR_DefaultRole",
-        #        CustomAmiId='ami-0e2a8509db267f072'
+        JobFlowRole='EMR_EC2_DefaultRole',
+        ServiceRole='EMR_DefaultRole',
     )
 
     output = {}

@@ -32,7 +32,6 @@ import csv
 
 csv.field_size_limit(sys.maxsize)
 
-
 def set_seed(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
