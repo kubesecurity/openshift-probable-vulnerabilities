@@ -51,7 +51,19 @@ P2BERT_CVE_MODEL_WEIGHTS_PATH = os.environ.get(
 )
 
 P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH = os.environ.get(
-    "P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH", "/model_assets/gokube-phase2/pytorch_cve_warmup/",
+    "P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH",
+    "/model_assets/gokube-phase2/pytorch-cve-warmup-2020_05_14_07_41_38/",
 )
 
 S3_MODEL_REFRESH = os.environ.get("S3_MODEL_REFRESH", "True")
+
+# TODO: Use this constant later to not download everything to disk, leave it for now disk is not a problem.
+MODEL_ASSETS = {
+    "sec_model": [
+        P1GRU_SEC_MODEL_TOKENIZER_PATH.lstrip("/"),
+        P1GRU_SEC_MODEL_WEIGHTS_PATH.lstrip("/"),
+    ],
+    "gru": [P1GRU_CVE_MODEL_TOKENIZER_PATH.lstrip("/"), P1GRU_CVE_MODEL_WEIGHTS_PATH.lstrip("/")],
+    "bert": [P2BERT_CVE_MODEL_WEIGHTS_PATH.lstrip("/"), BASE_BERT_UNCASED_PATH.lstrip("/")],
+    "bert_torch": [P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH.lstrip("/")],
+}

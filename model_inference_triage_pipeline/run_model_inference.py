@@ -377,7 +377,7 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
         aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
 
     if "torch" not in CVE_MODEL_TYPE.lower():
-        from models import run_bert_tensorflow_model, run_gru_cve_model
+        from models.run_tf_models import run_bert_tensorflow_model, run_gru_cve_model
 
         if CVE_MODEL_TYPE == "gru":
             df = run_gru_cve_model(df)
@@ -386,7 +386,7 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
             df = run_bert_tensorflow_model(df)
     else:
         from models.run_torch_model import run_torch_cve_model_bert
-        from models import run_tensorflow_security_classifier
+        from models.run_tf_models import run_tensorflow_security_classifier
 
         # Re-use the GRU based security/non-security classifier then pipe its output to the new BERT model.
         df = run_torch_cve_model_bert(run_tensorflow_security_classifier(df))

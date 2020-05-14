@@ -1,4 +1,5 @@
 import logging
+import math
 
 import daiquiri
 import numpy as np
@@ -43,11 +44,18 @@ class BertTorchCVEClassifier:
         self.model.eval()
         batch_size = batch_size or mc.BATCH_SIZE_PROB_CVE_BERT_TORCH
         input_tensor = self._preprocess_data(df)
-        _logger.info("Shape of input Tensor: {}".format(input_tensor.shape))
+        _logger.debug("Shape of input Tensor: {}".format(input_tensor.shape))
+        _logger.info(
+            "Running Inference on {} samples with a batch size of {}, num_batches: {}",
+            input_tensor.shape[0],
+            batch_size,
+            math.ceil(input_tensor.shape[0] / batch_size),
+        )
         input_dataset = TensorDataset(input_tensor)
         dataloader = DataLoader(input_dataset, batch_size=batch_size)
         preds = None
-        for batch in tqdm(dataloader, desc="Running Inference", ascii=True):
+        for idx, batch in enumerate(dataloader):
+            _logger.info("Processing batch #{}".format(idx + 1))
             with torch.no_grad():
                 logits = self.model(batch[0])
             if preds is not None:

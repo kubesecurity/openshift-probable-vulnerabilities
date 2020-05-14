@@ -194,8 +194,8 @@ def submit_job():
         ],
         Applications=[{"Name": "TensorFlow"}],
         VisibleToAllUsers=True,
-        JobFlowRole='EMR_EC2_DefaultRole',
-        ServiceRole='EMR_DefaultRole',
+        JobFlowRole="EMR_EC2_DefaultRole",
+        ServiceRole="EMR_DefaultRole",
     )
 
     output = {}
