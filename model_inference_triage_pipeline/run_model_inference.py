@@ -7,7 +7,6 @@ import warnings
 import arrow
 import daiquiri
 import pandas as pd
-import torch
 
 from utils import bq_client_helper as bq_helper
 from utils import cloud_constants as cc
@@ -27,8 +26,6 @@ def main():
     DAYS_SINCE_YDAY = args.days_since_yday
     ECO_SYSTEM = args.eco_system.lower()
     COMPUTE_DEVICE = args.compute_device.lower()
-    if COMPUTE_DEVICE != "cpu":
-        torch.set_default_tensor_type("torch.cuda.FloatTensor")
     SEC_MODEL_TYPE = args.security_filter_model.lower()
     if SEC_MODEL_TYPE != "" and SEC_MODEL_TYPE != "gru":
         _logger.error("GRU is the only supported security model type.")
@@ -67,11 +64,11 @@ def get_argument_parser():
              Usage patterns for inference script
              -----------------------------------
              The -days flag should be used with number of prev days data you want to pull
-    
-             1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru 
-             2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert 
-             3. CPU inference: 
-                    python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru  
+
+             1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru
+             2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert
+             3. CPU inference:
+                    python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru
              """
         ),
     )
@@ -116,7 +113,7 @@ def get_argument_parser():
         "--probable-cve-model",
         type=str,
         default="gru",
-        choices=["gru", "GRU", "bert", "BERT", "bert_torch", "BERT_TORCH"],
+        choices=["gru", "GRU", "bert", "BERT"],
         help="The AI Model to use for probable CVE predictions - Model 2",
     )
 
@@ -252,7 +249,7 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
                      ' '),
                  r'\s{2,}',
                  ' ')) as body
-    
+
     FROM `githubarchive.day.{year_prefix_wildcard}`
         WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
         AND repo.name in {repo_names}
@@ -306,7 +303,7 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
                      ' '),
                  r'\s{2,}',
                  ' ')) as body
-    
+
     FROM `githubarchive.day.{year_prefix_wildcard}`
         WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
         AND repo.name in {repo_names}
@@ -361,9 +358,7 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
         if CVE_MODEL_TYPE == "bert":
             df = run_bert_tensorflow_model(df)
     else:
-        from models.run_torch_model import run_torch_cve_model_bert
-
-        df = run_torch_cve_model_bert(df)
+        raise NotImplementedError
     return df
 
 
