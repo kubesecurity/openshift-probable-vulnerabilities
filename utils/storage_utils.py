@@ -56,15 +56,15 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
                 "Using Existing Model Inference Directory: {}".format(new_triage_results_dir)
             )
 
-    # df.drop(["norm_description", "description"], inplace=True, errors="ignore", axis=1)
+    if cc.INFERENCE_DROP_DESCRIPTIONS:
+        df.drop(["norm_description", "description"], inplace=True, errors="ignore", axis=1)
+
     df["triage_is_security"] = 0
     df["triage_is_cve"] = 0
     df["triage_feedback_comments"] = ""
     columns = [
         "ecosystem",
         "repo_name",
-        "description",
-        "norm_description",
         "event_type",
         "status",
         "url",
@@ -82,47 +82,40 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
         "creator_name",
         "creator_url",
     ]
+
+    if not cc.INFERENCE_DROP_DESCRIPTIONS:
+        # This is useful to retain data for retraining.
+        columns += ["description", "norm_description"]
+
     df = df[columns]
-    if not s3_upload:
-        _logger.info("Saving Model Inference datasets locally: {}".format(model_inference_dataset))
-        df.to_csv(model_inference_dataset, index=False)
-    else:
-        s3_path = "s3://{bucket_name}/triaged_datasets_full_data/{triage_dir}/{model_inference_dataset_filename}".format(
-            bucket_name=cc.S3_BUCKET_NAME_INFERENCE,
-            triage_dir=new_triage_subdir,
-            model_inference_dataset_filename=model_inference_dataset_filename,
-        )
-        df.to_csv(
-            s3_path, index=False,
-        )
-        _logger.info("Saving Model Inference dataset to S3: {}".format(s3_path))
+    _save(
+        df, new_triage_subdir, model_inference_dataset, model_inference_dataset_filename, s3_upload
+    )
 
     # Now save the probable securities dataset.
     df = df[df.security_model_flag == 1].drop(["triage_is_cve"], axis=1)
-    if not s3_upload:
-        _logger.info("Saving Probable Security dataset locally:{}".format(probable_sec_cve_dataset))
-        df.to_csv(probable_sec_cve_dataset, index=False)
-    else:
-        s3_path = "s3://{bucket_name}/triaged_datasets_full_data/{triage_dir}/{probable_sec_cve_dataset_filename}".format(
-            bucket_name=cc.S3_BUCKET_NAME_INFERENCE,
-            triage_dir=new_triage_subdir,
-            probable_sec_cve_dataset_filename=probable_sec_cve_dataset_filename,
-        )
-        df.to_csv(
-            s3_path, index=False,
-        )
-        _logger.info("Saving probable security CVE dataset to S3: {}".format(s3_path))
+    _save(
+        df,
+        new_triage_subdir,
+        probable_sec_cve_dataset,
+        probable_sec_cve_dataset_filename,
+        s3_upload,
+    )
 
     # Now save the probable CVE dataset.
     df = df[df.cve_model_flag == 1].drop(["triage_is_security"], axis=1)
+    _save(df, new_triage_subdir, probable_cve_dataset, probable_cve_dataset_filename, s3_upload)
+
+
+def _save(df, prefix, path, filename, s3_upload):
     if not s3_upload:
-        _logger.info("Saving Probable CVE dataset locally:{}".format(probable_cve_dataset))
-        df.to_csv(probable_cve_dataset, index=False)
+        _logger.info("Saving Probable CVE dataset locally:{}".format(path))
+        df.to_csv(path, index=False)
     else:
-        s3_path = "s3://{bucket_name}/triaged_datasets_full_data/{triage_dir}/{probable_cve_dataset_filename}".format(
+        s3_path = "s3://{bucket_name}/triaged_datasets/{triage_dir}/{probable_cve_dataset_filename}".format(
             bucket_name=cc.S3_BUCKET_NAME_INFERENCE,
-            triage_dir=new_triage_subdir,
-            probable_cve_dataset_filename=probable_cve_dataset_filename,
+            triage_dir=prefix,
+            probable_cve_dataset_filename=filename,
         )
         df.to_csv(
             s3_path, index=False,

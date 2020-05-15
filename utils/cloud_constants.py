@@ -67,3 +67,5 @@ MODEL_ASSETS = {
     "bert": [P2BERT_CVE_MODEL_WEIGHTS_PATH.lstrip("/"), BASE_BERT_UNCASED_PATH.lstrip("/")],
     "bert_torch": [P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH.lstrip("/")],
 }
+
+INFERENCE_DROP_DESCRIPTIONS = os.environ.get("INFERENCE_DROP_DESCRIPTIONS", "True")
