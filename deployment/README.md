@@ -217,7 +217,7 @@ Partial GPU allocation is currently not possible, the request and limit have to 
 
 If everything before this was done properly, once you apply the relevant template as with:
 ```bash
-oc process <templatename.yaml> | oc create -f -
+oc process [templatename.yaml] | oc create -f -
 ```
 The Pod should be in `ContainerCreating` state for a while and then move on to the `running` state. If the GPU
 resource has not been properly registered the pod will remain un-schedulable and `oc get events` should
