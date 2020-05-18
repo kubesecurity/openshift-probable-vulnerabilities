@@ -46,11 +46,11 @@ class BertTorchCVEClassifier:
         input_tensor = self._preprocess_data(df)
         _logger.debug("Shape of input Tensor: {}".format(input_tensor.shape))
         _logger.info(
-            "Running Inference on {} samples with a batch size of {}, num_batches: {}",
+            "Running Inference on {} samples with a batch size of {}, num_batches: {}".format(
             input_tensor.shape[0],
             batch_size,
             math.ceil(input_tensor.shape[0] / batch_size),
-        )
+        ))
         input_dataset = TensorDataset(input_tensor)
         dataloader = DataLoader(input_dataset, batch_size=batch_size)
         preds = None

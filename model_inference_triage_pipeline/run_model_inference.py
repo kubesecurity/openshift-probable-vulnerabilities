@@ -7,9 +7,10 @@ import warnings
 import arrow
 import daiquiri
 import pandas as pd
-import torch
 
-from utils import bq_client_helper as bq_helper, aws_utils as aws, cloud_constants as cc
+from utils import aws_utils as aws
+from utils import bq_client_helper as bq_helper
+from utils import cloud_constants as cc
 from utils.storage_utils import write_output_csv
 
 daiquiri.setup(level=logging.INFO)
@@ -75,11 +76,11 @@ def get_argument_parser():
              Usage patterns for inference script
              -----------------------------------
              The -days flag should be used with number of prev days data you want to pull
-    
-             1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru 
-             2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert 
-             3. CPU inference: 
-                    python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru  
+
+             1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru
+             2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert
+             3. CPU inference:
+                    python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru
              """
         ),
     )
@@ -273,7 +274,7 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
                      ' '),
                  r'\s{2,}',
                  ' ')) as body
-    
+
     FROM `githubarchive.day.{year_prefix_wildcard}`
         WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
         AND repo.name in {repo_names}
@@ -327,7 +328,7 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
                      ' '),
                  r'\s{2,}',
                  ' ')) as body
-    
+
     FROM `githubarchive.day.{year_prefix_wildcard}`
         WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
         AND repo.name in {repo_names}

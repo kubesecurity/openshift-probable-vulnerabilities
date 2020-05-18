@@ -87,7 +87,7 @@ parameters:
   displayName: Memory request
   required: true
   name: MEMORY_REQUEST
-  value: "256Mi"
+  value: "6Gi"
 
 - description: Memory limit
   displayName: Memory limit
