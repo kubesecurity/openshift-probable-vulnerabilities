@@ -19,9 +19,11 @@ BIGQUERY_CREDENTIALS_FILEPATH = os.environ.get(
     "BIGQUERY_CREDENTIALS_FILEPATH", "../../auth/bq_key.json"
 )
 
-GOKUBE_REPO_LIST = os.environ.get("GOKUBE_REPO_LIST", "/data_assets/golang-repo-list.txt")
-KNATIVE_REPO_LIST = os.environ.get("KNATIVE_REPO_LIST", "/data_assets/knative-repo-list.txt")
-KUBEVIRT_REPO_LIST = os.environ.get("KUBEVIRT_REPO_LIST", "/data_assets/kubevirt-repo-list.txt")
+GOKUBE_REPO_LIST = os.environ.get("GOKUBE_REPO_LIST", "/utils/data_assets/golang-repo-list.txt")
+KNATIVE_REPO_LIST = os.environ.get("KNATIVE_REPO_LIST", "/utils/data_assets/knative-repo-list.txt")
+KUBEVIRT_REPO_LIST = os.environ.get(
+    "KUBEVIRT_REPO_LIST", "/utils/data_assets/kubevirt-repo-list.txt"
+)
 
 P1GRU_SEC_MODEL_TOKENIZER_PATH = os.environ.get(
     "P1GRU_SEC_MODEL_TOKENIZER_PATH",

@@ -103,7 +103,7 @@ parameters:
   displayName: Image tag
   required: true
   name: IMAGE_TAG
-  value: "torch_model"
+  value: "latest"
 
 - description: Number of deployment replicas
   displayName: Number of deployment replicas

@@ -1,3 +1,4 @@
+"""Contains file utilities to read/write from S3 and local file system."""
 import logging
 import os
 
@@ -61,7 +62,6 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_is_cve"] = 0
     df["triage_feedback_comments"] = ""
     columns = [
-        "ecosystem",
         "repo_name",
         "event_type",
         "status",
@@ -81,6 +81,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
         "creator_url",
     ]
     df = df[columns]
+    df.loc[:, "ecosystem"] = ecosystem
     if not s3_upload:
         _logger.info("Saving Model Inference datasets locally: {}".format(model_inference_dataset))
         df.to_csv(model_inference_dataset, index=False)

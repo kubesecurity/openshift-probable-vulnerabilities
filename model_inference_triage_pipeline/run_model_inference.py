@@ -9,8 +9,8 @@ import daiquiri
 import pandas as pd
 
 from utils import aws_utils as aws
-from utils import bq_client_helper as bq_helper
 from utils import cloud_constants as cc
+from utils.bq_utils import get_bq_data_for_inference
 from utils.storage_utils import write_output_csv
 
 daiquiri.setup(level=logging.INFO)
@@ -24,12 +24,14 @@ def main():
     parser = get_argument_parser()
     args = parser.parse_args()
 
-    DAYS_SINCE_YDAY = args.days_since_yday
-    ECO_SYSTEM = args.eco_system.lower()
+    ECOSYSTEM = args.eco_system.lower()
     COMPUTE_DEVICE = args.compute_device.lower()
 
     if COMPUTE_DEVICE != "cpu":
+        import torch
+
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
+
     SEC_MODEL_TYPE = args.security_filter_model.lower()
     if SEC_MODEL_TYPE != "" and SEC_MODEL_TYPE != "gru":
         _logger.error("GRU is the only supported security model type.")
@@ -37,24 +39,17 @@ def main():
     CVE_MODEL_TYPE = args.probable_cve_model.lower()
     S3_UPLOAD = args.s3_upload_cves
 
-    if args.start_date == "" and args.end_date == "":
-        day_count, start_time, end_time, date_range = setup_dates_for_triage(
-            days_since_yday=DAYS_SINCE_YDAY
-        )
-    else:
-        start_time = arrow.get(args.start_date, "YYYY-MM-DD")
-        end_time = arrow.get(args.end_date, "YYYY-MM-DD")
-        day_count = (end_time - start_time).days
-        date_range = [
-            dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day", start_time, end_time)
-        ]
-    df = get_bq_data_for_inference(ECO_SYSTEM, day_count, date_range)
+    day_count, start_time, end_time, date_range = setup_dates_for_triage(
+        args.days_since_yday, args.start_date, args.end_date
+    )
+
+    df = get_bq_data_for_inference(ECOSYSTEM, day_count, date_range)
     df = run_inference(df, CVE_MODEL_TYPE)
     write_output_csv(
         start_time,
         end_time,
         cve_model_type=CVE_MODEL_TYPE,
-        ecosystem=ECO_SYSTEM,
+        ecosystem=ECOSYSTEM,
         df=df,
         s3_upload=S3_UPLOAD,
     )
@@ -157,10 +152,18 @@ def get_argument_parser():
     return parser
 
 
-def setup_dates_for_triage(days_since_yday):
+def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
     """Sets up the date range for data retireval."""
     # ======= DATES SETUP FOR GETTING GITHUB BQ DATA ========
     _logger.info("----- DATES SETUP FOR GETTING GITHUB BQ DATA -----")
+    if start_date_user != "" and end_date_user != "":
+        start_time = arrow.get(start_date_user, "YYYY-MM-DD")
+        end_time = arrow.get(end_date_user, "YYYY-MM-DD")
+        day_count = (end_time - start_time).days
+        date_range = [
+            dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day", start_time, end_time)
+        ]
+        return day_count, start_time, end_time, date_range
 
     # Don't change this
     present_time = arrow.now()
@@ -189,188 +192,6 @@ def setup_dates_for_triage(days_since_yday):
         "Data will be retrieved for Last N={n} days: {days}\n".format(n=day_count, days=date_range)
     )
     return day_count, start_time, end_time, date_range
-
-
-def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
-    """Query bigquery to retrieve data that is required for running the inference."""
-    # ======= BQ CLIENT SETUP FOR GETTING GITHUB BQ DATA ========
-    _logger.info("----- BQ CLIENT SETUP FOR GETTING GITHUB BQ DATA -----")
-
-    GH_BQ_CLIENT = bq_helper.create_github_bq_client()
-    if ecosystem == "openshift":
-        REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.GOKUBE_REPO_LIST)
-    elif ecosystem == "knative":
-        REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.KNATIVE_REPO_LIST)
-    elif ecosystem == "kubevirt":
-        REPO_NAMES = bq_helper.get_gokube_trackable_repos(repo_dir=cc.KUBEVIRT_REPO_LIST)
-    else:
-        _logger.error(
-            "Unsupported ecosystem, please re-run the inference with a valid ecosystem parameter."
-        )
-        # Returning 0 because this isn't a "HARD" error.
-        sys.exit(0)
-
-    # ======= BQ QUERY PARAMS SETUP FOR GETTING GITHUB BQ DATA ========
-    _logger.info("----- BQ QUERY PARAMS SETUP FOR GETTING GITHUB BQ DATA -----")
-
-    # Don't change this
-    YEAR_PREFIX = "20*"
-    DAY_LIST = [item[2:] for item in date_range]
-    QUERY_PARAMS = {
-        "{year_prefix_wildcard}": YEAR_PREFIX,
-        "{year_suffix_month_day}": "(" + ", ".join(["'" + d + "'" for d in DAY_LIST]) + ")",
-        "{repo_names}": "(" + ", ".join(["'" + r + "'" for r in REPO_NAMES]) + ")",
-    }
-
-    _logger.info("\n")
-
-    # ======= BQ GET DATASET SIZE ESTIMATE ========
-    _logger.info("----- BQ Dataset Size Estimate -----")
-
-    query = """
-    SELECT  type as EventType, count(*) as Freq
-            FROM `githubarchive.day.{year_prefix_wildcard}`
-            WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
-            AND repo.name in {repo_names}
-            AND type in ('PullRequestEvent', 'IssuesEvent')
-            GROUP BY type
-    """
-    query = bq_helper.bq_add_query_params(query, QUERY_PARAMS)
-    df = GH_BQ_CLIENT.query_to_pandas(query)
-    _logger.info("Dataset Size for Last N={n} days:-".format(n=day_count))
-    _logger.info("\n{data}".format(data=df))
-
-    _logger.info("\n")
-
-    # ======= BQ GITHUB DATASET RETRIEVAL & PROCESSING ========
-    _logger.info("----- BQ GITHUB DATASET RETRIEVAL & PROCESSING -----")
-
-    ISSUE_QUERY = """
-    SELECT
-        repo.name as repo_name,
-        type as event_type,
-        'golang' as ecosystem,
-        JSON_EXTRACT_SCALAR(payload, '$.action') as status,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.id') as id,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.number') as number,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.url') as api_url,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.html_url') as url,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.user.login') as creator_name,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.user.html_url') as creator_url,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.created_at') as created_at,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.updated_at') as updated_at,
-        JSON_EXTRACT_SCALAR(payload, '$.issue.closed_at') as closed_at,
-        TRIM(REGEXP_REPLACE(
-                 REGEXP_REPLACE(
-                     JSON_EXTRACT_SCALAR(payload, '$.issue.title'),
-                     r'\\r\\n|\\r|\\n',
-                     ' '),
-                 r'\s{2,}',
-                 ' ')) as title,
-        TRIM(REGEXP_REPLACE(
-                 REGEXP_REPLACE(
-                     JSON_EXTRACT_SCALAR(payload, '$.issue.body'),
-                     r'\\r\\n|\\r|\\n',
-                     ' '),
-                 r'\s{2,}',
-                 ' ')) as body
-
-    FROM `githubarchive.day.{year_prefix_wildcard}`
-        WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
-        AND repo.name in {repo_names}
-        AND type = 'IssuesEvent'
-        """
-
-    ISSUE_QUERY = bq_helper.bq_add_query_params(ISSUE_QUERY, QUERY_PARAMS)
-    qsize = GH_BQ_CLIENT.estimate_query_size(ISSUE_QUERY)
-    _logger.info("Retrieving GH Issues. Query cost in GB={qc}".format(qc=qsize))
-
-    issues_df = GH_BQ_CLIENT.query_to_pandas(ISSUE_QUERY)
-    if issues_df.empty:
-        _logger.warn("No issues present for given time duration.")
-    else:
-        _logger.info("Total issues retrieved: {n}".format(n=len(issues_df)))
-
-        issues_df.created_at = pd.to_datetime(issues_df.created_at)
-        issues_df.updated_at = pd.to_datetime(issues_df.updated_at)
-        issues_df.closed_at = pd.to_datetime(issues_df.closed_at)
-        issues_df = issues_df.loc[
-            issues_df.groupby("url").updated_at.idxmax(skipna=False)
-        ].reset_index(drop=True)
-        _logger.info("Total issues after deduplication: {n}".format(n=len(issues_df)))
-
-    PR_QUERY = """
-    SELECT
-        repo.name as repo_name,
-        type as event_type,
-        'golang' as ecosystem,
-        JSON_EXTRACT_SCALAR(payload, '$.action') as status,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.id') as id,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.number') as number,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.url') as api_url,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.html_url') as url,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.user.login') as creator_name,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.user.html_url') as creator_url,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.created_at') as created_at,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.updated_at') as updated_at,
-        JSON_EXTRACT_SCALAR(payload, '$.pull_request.closed_at') as closed_at,
-        TRIM(REGEXP_REPLACE(
-                 REGEXP_REPLACE(
-                     JSON_EXTRACT_SCALAR(payload, '$.pull_request.title'),
-                     r'\\r\\n|\\r|\\n',
-                     ' '),
-                 r'\s{2,}',
-                 ' ')) as title,
-        TRIM(REGEXP_REPLACE(
-                 REGEXP_REPLACE(
-                     JSON_EXTRACT_SCALAR(payload, '$.pull_request.body'),
-                     r'\\r\\n|\\r|\\n',
-                     ' '),
-                 r'\s{2,}',
-                 ' ')) as body
-
-    FROM `githubarchive.day.{year_prefix_wildcard}`
-        WHERE _TABLE_SUFFIX IN {year_suffix_month_day}
-        AND repo.name in {repo_names}
-        AND type = 'PullRequestEvent'
-    """
-
-    PR_QUERY = bq_helper.bq_add_query_params(PR_QUERY, QUERY_PARAMS)
-    qsize = GH_BQ_CLIENT.estimate_query_size(PR_QUERY)
-    _logger.info("Retrieving GH Pull Requests. Query cost in GB={qc}".format(qc=qsize))
-
-    prs_df = GH_BQ_CLIENT.query_to_pandas(PR_QUERY)
-    if prs_df.empty:
-        _logger.warn("No pull requests present for given time duration.")
-    else:
-        _logger.info("Total pull requests retrieved: {n}".format(n=len(prs_df)))
-
-        prs_df.created_at = pd.to_datetime(prs_df.created_at)
-        prs_df.updated_at = pd.to_datetime(prs_df.updated_at)
-        prs_df.closed_at = pd.to_datetime(prs_df.closed_at)
-        prs_df = prs_df.loc[prs_df.groupby("url").updated_at.idxmax(skipna=False)].reset_index(
-            drop=True
-        )
-        _logger.info("Total pull requests after deduplication: {n}".format(n=len(prs_df)))
-
-    _logger.info("\n")
-
-    _logger.info("Merging issues and pull requests datasets")
-    cols = issues_df.columns
-    df = pd.concat([issues_df, prs_df], axis=0, sort=False, ignore_index=True).reset_index(
-        drop=True
-    )
-    df = df[cols]
-
-    if df.empty:
-        _logger.warn("Nothing to predict today :)")
-        sys.exit(0)
-
-    _logger.info("Creating description column for NLP")
-    df["description"] = df["title"].fillna(value="").map(str) + " " + df["body"].fillna(value="")
-    columns = ["title", "body"]
-    df.drop(columns, inplace=True, axis=1)
-    return df
 
 
 def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
