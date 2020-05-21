@@ -20,9 +20,9 @@ _logger = daiquiri.getLogger(__name__)
 
 
 def run_tensorflow_security_classifier(df: pd.DataFrame):
+    """Run inference against the security issues classifier."""
     _logger.info("Text Pre-processing Issue/PR Descriptions")
     df["norm_description"] = tn.pre_process_documents_parallel(documents=df["description"].values)
-    # df.drop(['description'], inplace=True, axis=1)
 
     _logger.info("Setting Default CVE and Security Flags")
     df["security_model_flag"] = 0
@@ -58,7 +58,9 @@ def run_tensorflow_security_classifier(df: pd.DataFrame):
         filtered_security_encoded_docs, batch_size=mc.BATCH_SIZE_PROB_SEC_BERT, verbose=0
     )
     sec_pred_probsr = sec_pred_probs.ravel()
-    sec_pred_labels = [1 if prob > 0.4 else 0 for prob in sec_pred_probsr]
+    sec_pred_labels = [
+        1 if prob > mc.GRU_SEC_MODEL_PROB_THRESHOLD else 0 for prob in sec_pred_probsr
+    ]
     _logger.info("Updating Security Model predictions in dataset")
     df.loc[df.index.isin(sec_doc_idx), "security_model_flag"] = sec_pred_labels
 
@@ -70,6 +72,7 @@ def run_tensorflow_security_classifier(df: pd.DataFrame):
 
 
 def run_bert_tensorflow_model(df: pd.DataFrame):
+    """Run CVE classifier using the bert-tensorflow BERT model."""
     df = run_tensorflow_security_classifier(df)
     _logger.info("\n")
 
@@ -117,10 +120,12 @@ def run_bert_tensorflow_model(df: pd.DataFrame):
         verbose=1,
     )
     cve_pred_probsr = cve_pred_probs.ravel()
-    cve_pred_labels = [1 if prob > 0.5 else 0 for prob in cve_pred_probsr]
+    cve_pred_labels = [
+        1 if prob > mc.BERT_CVE_PROB_THRESHOLD_LEGACY else 0 for prob in cve_pred_probsr
+    ]
     from collections import Counter
 
-    print(Counter(cve_pred_labels))
+    _logger.info(Counter(cve_pred_labels))
     _logger.info("Updating CVE Model predictions in dataset")
     prob_cve_idxs = prob_security_df_rowidx[cve_doc_idx]
     df.loc[df.index.isin(prob_cve_idxs), "cve_model_flag"] = cve_pred_labels
@@ -134,6 +139,7 @@ def run_bert_tensorflow_model(df: pd.DataFrame):
 
 
 def run_gru_cve_model(df):
+    """Run inference against the GRU based CVE classifier model."""
     df = run_tensorflow_security_classifier(df)
     _logger.info("Loading CVE Model")
     cvc = cdc.CVEClassifier(

@@ -55,29 +55,32 @@ def main():
     )
 
 
+# noinspection PyTypeChecker
 def get_argument_parser():
     """Defines all the command line arguments for the program."""
+    description: str = textwrap.dedent(
+        """
+        This script can be used to run our AI models for probable vulnerability predictions.
+        Check usage patterns below.
+        """
+    )
+    epilog: str = textwrap.dedent(
+        """
+         Usage patterns for inference script
+         -----------------------------------
+         The -days flag should be used with number of prev days data you want to pull
+
+         1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru
+         2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert
+         3. CPU inference:
+                python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru
+         """
+    )
     parser = argparse.ArgumentParser(
         prog="python",
-        description=textwrap.dedent(
-            """\
-                        This script can be used to run our
-                        AI models for probable vulnerability predictions.
-                        Check usage patterns below"""
-        ),
+        description=description,
+        epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
-             Usage patterns for inference script
-             -----------------------------------
-             The -days flag should be used with number of prev days data you want to pull
-
-             1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru
-             2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert
-             3. CPU inference:
-                    python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru
-             """
-        ),
     )
 
     parser.add_argument(

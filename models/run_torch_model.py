@@ -1,3 +1,4 @@
+"""Wrapper module to run inference using the transformers library based torch impl. of BERT CVE classifier."""
 import logging
 
 import daiquiri
@@ -14,6 +15,7 @@ _logger = daiquiri.getLogger(__name__)
 def run_torch_cve_model_bert(
     df: pandas.DataFrame, custom_model_path=None, batch_size_prediction=None
 ) -> pandas.DataFrame:
+    """Run inference on the supplied dataframe and return the same with `cve_model` column filled."""
     _logger.info("Starting inference on security issues.")
     _logger.info("Keeping track of probable security issue rows")
     subset_df = df[df["security_model_flag"] == 1]

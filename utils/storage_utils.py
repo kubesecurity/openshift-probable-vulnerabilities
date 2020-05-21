@@ -127,3 +127,4 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
             s3_path, index=False,
         )
         _logger.info("Saving Probable dataset to S3: {}".format(s3_path))
+    return df
