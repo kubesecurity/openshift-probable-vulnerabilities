@@ -202,8 +202,13 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
         aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
 
     if "torch" not in CVE_MODEL_TYPE.lower():
-        from models.run_tf_models import run_bert_tensorflow_model, run_gru_cve_model
+        from models.run_tf_models import (
+            run_bert_tensorflow_model,
+            run_gru_cve_model,
+            run_tensorflow_security_classifier,
+        )
 
+        df = run_tensorflow_security_classifier(df)
         if CVE_MODEL_TYPE == "gru":
             df = run_gru_cve_model(df)
 
