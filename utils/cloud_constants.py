@@ -19,9 +19,11 @@ BIGQUERY_CREDENTIALS_FILEPATH = os.environ.get(
     "BIGQUERY_CREDENTIALS_FILEPATH", "../../auth/bq_key.json"
 )
 
-GOKUBE_REPO_LIST = os.environ.get("GOKUBE_REPO_LIST", "/data_assets/golang-repo-list.txt")
-KNATIVE_REPO_LIST = os.environ.get("KNATIVE_REPO_LIST", "/data_assets/knative-repo-list.txt")
-KUBEVIRT_REPO_LIST = os.environ.get("KUBEVIRT_REPO_LIST", "/data_assets/kubevirt-repo-list.txt")
+GOKUBE_REPO_LIST = os.environ.get("GOKUBE_REPO_LIST", "/utils/data_assets/golang-repo-list.txt")
+KNATIVE_REPO_LIST = os.environ.get("KNATIVE_REPO_LIST", "/utils/data_assets/knative-repo-list.txt")
+KUBEVIRT_REPO_LIST = os.environ.get(
+    "KUBEVIRT_REPO_LIST", "/utils/data_assets/kubevirt-repo-list.txt"
+)
 
 P1GRU_SEC_MODEL_TOKENIZER_PATH = os.environ.get(
     "P1GRU_SEC_MODEL_TOKENIZER_PATH",
@@ -50,4 +52,22 @@ P2BERT_CVE_MODEL_WEIGHTS_PATH = os.environ.get(
     "/model_assets/gokube-phase2/saved_models/bert_cve75_weights-ep:02-trn_loss:0.172-trn_acc:0.957-val_loss:0.164-val_acc:0.978.h5",
 )
 
+P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH = os.environ.get(
+    "P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH",
+    "/model_assets/gokube-phase2/pytorch-cve-warmup-2020_05_14_07_41_38/",
+)
+
 S3_MODEL_REFRESH = os.environ.get("S3_MODEL_REFRESH", "True")
+
+# TODO: Use this constant later to not download everything to disk, leave it for now disk is not a problem.
+MODEL_ASSETS = {
+    "sec_model": [
+        P1GRU_SEC_MODEL_TOKENIZER_PATH.lstrip("/"),
+        P1GRU_SEC_MODEL_WEIGHTS_PATH.lstrip("/"),
+    ],
+    "gru": [P1GRU_CVE_MODEL_TOKENIZER_PATH.lstrip("/"), P1GRU_CVE_MODEL_WEIGHTS_PATH.lstrip("/")],
+    "bert": [P2BERT_CVE_MODEL_WEIGHTS_PATH.lstrip("/"), BASE_BERT_UNCASED_PATH.lstrip("/")],
+    "bert_torch": [P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH.lstrip("/")],
+}
+
+INFERENCE_DROP_DESCRIPTIONS = os.environ.get("INFERENCE_DROP_DESCRIPTIONS", "True")

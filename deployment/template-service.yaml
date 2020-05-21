@@ -37,6 +37,8 @@ objects:
             value: ${AWS_BUCKET_NAME_MODEL}
           - name: DAYS
             value: ${DAYS}
+          - name: CVE_MODEL
+            value: ${CVE_MODEL}
           - name: BIGQUERY_CREDENTIALS_FILEPATH
             value: "/etc/credentials/gcloud/google-services.json"
           - name: AWS_ACCESS_KEY_ID
@@ -169,3 +171,9 @@ parameters:
   required: true
   name: AWS_BUCKET_NAME_INFERENCE
   value: "avgupta-dev-gokube-triage"
+
+- description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
+  displayName: CVE Model Name
+  required: true
+  name: CVE_MODEL
+  value: "bert_torch"

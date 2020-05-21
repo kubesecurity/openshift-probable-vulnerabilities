@@ -1,6 +1,7 @@
 import numpy as np
 import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 import tensorflow as tf
 import keras
 import dill
@@ -19,11 +20,16 @@ tf.set_random_seed(SEED)
 
 
 class AttentionLayer(Layer):
-
-    def __init__(self, step_dim,
-                 W_regularizer=None, b_regularizer=None,
-                 W_constraint=None, b_constraint=None,
-                 bias=True, **kwargs):
+    def __init__(
+        self,
+        step_dim,
+        W_regularizer=None,
+        b_regularizer=None,
+        W_constraint=None,
+        b_constraint=None,
+        bias=True,
+        **kwargs
+    ):
         """
         Keras Layer that implements an Attention mechanism for temporal data.
         Supports Masking.
@@ -38,7 +44,7 @@ class AttentionLayer(Layer):
         """
 
         self.supports_masking = True
-        self.init = keras.initializers.get('glorot_uniform')
+        self.init = keras.initializers.get("glorot_uniform")
 
         self.W_regularizer = keras.regularizers.get(W_regularizer)
         self.b_regularizer = keras.regularizers.get(b_regularizer)
@@ -54,19 +60,23 @@ class AttentionLayer(Layer):
     def build(self, input_shape):
         assert len(input_shape) == 3
 
-        self.W = self.add_weight((input_shape[-1],),
-                                 initializer=self.init,
-                                 name='{}_W'.format(self.name),
-                                 regularizer=self.W_regularizer,
-                                 constraint=self.W_constraint)
+        self.W = self.add_weight(
+            (input_shape[-1],),
+            initializer=self.init,
+            name="{}_W".format(self.name),
+            regularizer=self.W_regularizer,
+            constraint=self.W_constraint,
+        )
         self.features_dim = input_shape[-1]
 
         if self.bias:
-            self.b = self.add_weight((input_shape[1],),
-                                     initializer='zero',
-                                     name='{}_b'.format(self.name),
-                                     regularizer=self.b_regularizer,
-                                     constraint=self.b_constraint)
+            self.b = self.add_weight(
+                (input_shape[1],),
+                initializer="zero",
+                name="{}_b".format(self.name),
+                regularizer=self.b_regularizer,
+                constraint=self.b_constraint,
+            )
         else:
             self.b = None
 
@@ -85,9 +95,10 @@ class AttentionLayer(Layer):
         features_dim = self.features_dim
         step_dim = self.step_dim
 
-        eij = K.reshape(K.dot(K.reshape(x, (-1, features_dim)),
-                              K.reshape(self.W, (features_dim, 1))),
-                        (-1, step_dim))
+        eij = K.reshape(
+            K.dot(K.reshape(x, (-1, features_dim)), K.reshape(self.W, (features_dim, 1))),
+            (-1, step_dim),
+        )
 
         if self.bias:
             eij += self.b
@@ -113,7 +124,7 @@ class AttentionLayer(Layer):
         return input_shape[0], self.features_dim
 
     def get_config(self):
-        config = {'step_dim': self.step_dim}
+        config = {"step_dim": self.step_dim}
         base_config = super(AttentionLayer, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
@@ -123,55 +134,74 @@ class ModelNotBuiltException(Exception):
 
 
 class SecurityClassifier:
-
-    def __init__(self, tokenizer_path, model_weights_path,
-                 embedding_size=None, max_features=None,
-                 max_length=None):
+    def __init__(
+        self,
+        tokenizer_path,
+        model_weights_path,
+        embedding_size=None,
+        max_features=None,
+        max_length=None,
+    ):
 
         self.EMBED_SIZE = 300 if not embedding_size else embedding_size
         self.MAX_FEATURES = 800000 if not max_features else max_features
         self.MAX_LEN = 1000 if not max_length else max_length
         self.TOKENIZER_PATH = tokenizer_path
         self.TOKENIZER = keras.preprocessing.text.Tokenizer(
-            oov_token='<UNK>', num_words=self.MAX_FEATURES)
+            oov_token="<UNK>", num_words=self.MAX_FEATURES
+        )
         self.GRU_UNITS = 32
         self.MODEL_WEIGHTS_PATH = model_weights_path
         self.MODEL = None
 
-        _logger.info('Loading Security Model Tokenizer Vocabulary')
-        with open(self.TOKENIZER_PATH, 'rb') as f:
+        _logger.info("Loading Security Model Tokenizer Vocabulary")
+        with open(self.TOKENIZER_PATH, "rb") as f:
             word2idx = dill.load(f)
         self.TOKENIZER.word_index = word2idx
         self.MAX_FEATURES = len(self.TOKENIZER.word_index)
 
     def build_model_architecture(self, gru_units=32):
-        _logger.info('Building Security Model Architecture')
+        _logger.info("Building Security Model Architecture")
         # This can change in the future
         self.GRU_UNITS = gru_units if gru_units else self.GRU_UNITS
 
         inp = keras.layers.Input(shape=(self.MAX_LEN,))
-        x = keras.layers.Embedding(
-            self.MAX_FEATURES, self.EMBED_SIZE, trainable=False)(inp)
-        x = keras.layers.Bidirectional(keras.layers.GRU(self.GRU_UNITS * 2, return_sequences=True,
-                                                        reset_after=True, recurrent_activation='sigmoid'))(x)
-        x = keras.layers.Bidirectional(keras.layers.GRU(self.GRU_UNITS, return_sequences=True, reset_after=True,
-                                                        recurrent_activation='sigmoid'))(x)
+        x = keras.layers.Embedding(self.MAX_FEATURES, self.EMBED_SIZE, trainable=False)(inp)
+        x = keras.layers.Bidirectional(
+            keras.layers.GRU(
+                self.GRU_UNITS * 2,
+                return_sequences=True,
+                reset_after=True,
+                recurrent_activation="sigmoid",
+            )
+        )(x)
+        x = keras.layers.Bidirectional(
+            keras.layers.GRU(
+                self.GRU_UNITS,
+                return_sequences=True,
+                reset_after=True,
+                recurrent_activation="sigmoid",
+            )
+        )(x)
         x = AttentionLayer(self.MAX_LEN)(x)
-        x = keras.layers.Dense(self.GRU_UNITS * 2, activation='relu')(x)
+        x = keras.layers.Dense(self.GRU_UNITS * 2, activation="relu")(x)
         x = keras.layers.Dropout(rate=0.2)(x)
-        x = keras.layers.Dense(self.GRU_UNITS, activation='relu')(x)
+        x = keras.layers.Dense(self.GRU_UNITS, activation="relu")(x)
         x = keras.layers.Dropout(rate=0.2)(x)
-        outp = keras.layers.Dense(1, activation='sigmoid')(x)
+        outp = keras.layers.Dense(1, activation="sigmoid")(x)
 
         model = keras.models.Model(inputs=inp, outputs=outp)
-        model.compile(loss='binary_crossentropy',
-                      optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
+        model.compile(
+            loss="binary_crossentropy", optimizer=keras.optimizers.Adam(), metrics=["accuracy"]
+        )
 
         self.MODEL = model
 
     def load_model_weights(self, model_weights_path=None):
-        _logger.info('Loading Security Model Weights')
-        self.MODEL_WEIGHTS_PATH = model_weights_path if model_weights_path else self.MODEL_WEIGHTS_PATH
+        _logger.info("Loading Security Model Weights")
+        self.MODEL_WEIGHTS_PATH = (
+            model_weights_path if model_weights_path else self.MODEL_WEIGHTS_PATH
+        )
         if not self.MODEL:
             self.build_model_architecture()
 
@@ -181,12 +211,12 @@ class SecurityClassifier:
 
         doc_sequences = self.TOKENIZER.texts_to_sequences(documents)
         doc_sequences = keras.preprocessing.sequence.pad_sequences(
-            doc_sequences, maxlen=self.MAX_LEN)
+            doc_sequences, maxlen=self.MAX_LEN
+        )
         return doc_sequences
 
-    def get_model(self):
+    def get_model(self) -> keras.models.Model:
         if not self.MODEL:
-            raise ModelNotBuiltException(
-                "Security Model doesn't exist. Please build model first")
+            raise ModelNotBuiltException("Security Model doesn't exist. Please build model first")
         else:
             return self.MODEL
