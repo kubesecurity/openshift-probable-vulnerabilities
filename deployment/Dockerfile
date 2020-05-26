@@ -20,6 +20,6 @@ ADD models /models
 ADD utils /utils
 ADD deployment/entrypoint.sh /entrypoint.sh
 
-RUN mkdir /model_assets/ && chmod +x /entrypoint.sh && chmod -R 0777 /data_assets/ /model_assets/
+RUN mkdir /model_assets/ && chmod +x /entrypoint.sh && chmod -R 0777 /model_assets/ /utils/data_assets/
 
 ENTRYPOINT ["/entrypoint.sh"]
