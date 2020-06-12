@@ -1,5 +1,6 @@
 import logging
 import math
+from collections import Counter
 
 import daiquiri
 import numpy as np
@@ -47,10 +48,9 @@ class BertTorchCVEClassifier:
         _logger.debug("Shape of input Tensor: {}".format(input_tensor.shape))
         _logger.info(
             "Running Inference on {} samples with a batch size of {}, num_batches: {}".format(
-            input_tensor.shape[0],
-            batch_size,
-            math.ceil(input_tensor.shape[0] / batch_size),
-        ))
+                input_tensor.shape[0], batch_size, math.ceil(input_tensor.shape[0] / batch_size),
+            )
+        )
         input_dataset = TensorDataset(input_tensor)
         dataloader = DataLoader(input_dataset, batch_size=batch_size)
         preds = None
@@ -63,6 +63,7 @@ class BertTorchCVEClassifier:
             else:
                 preds = logits[0]
         preds: np.array = torch.argmax(preds, dim=1).detach().cpu().numpy()
+        _logger.info(Counter(preds))
         return preds
 
     def _preprocess_data(self, df: pd.DataFrame) -> Tensor:
