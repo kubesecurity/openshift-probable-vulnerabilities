@@ -16,7 +16,7 @@ log = daiquiri.getLogger(__name__)  # pylint: disable=invalid-name
 INSERT_API_PATH = "/api/v1/pcve"
 API_FULL_PATH = "{host}{api}".format(host=cc.OSA_API_SERVER_URL, api=INSERT_API_PATH)
 
-_failing_list: []
+_failing_list = []
 
 
 def _report_failures(df: pd.DataFrame, triage_subdir: str, s3_upload: bool, ecosystem: str):
@@ -35,7 +35,6 @@ def _report_failures(df: pd.DataFrame, triage_subdir: str, s3_upload: bool, ecos
 
 def _insert_df(df: pd.DataFrame, url: str):
     """Call API server and insert data."""
-    log.info("inside _insert_df")
     objs = df.to_dict(orient='records')
     for obj in objs:
         result = requests.post(url, json=obj)
@@ -44,6 +43,8 @@ def _insert_df(df: pd.DataFrame, url: str):
             log.error('Error response: {}, msg: {}, data: {}'
                       .format(result.status_code, result.json()["message"], json.dumps(obj)))
             _failing_list.append(obj["url"])
+
+    log.info("Record insertion completed.")
 
 
 def _get_status_type(status: str) -> str:
@@ -78,9 +79,7 @@ def save_data_to_db(start_time: datetime, end_time: datetime, cve_model_type, s3
 
         log.info("PCVE data count :{count}".format(count=str(df.shape[0])))
         updated_df = _update_df(df)
-        log.info("update df completed")
-
-        log.info("PCVE data count after update :{count}".format(count=str(df.shape[0])))
+        log.info("Update df completed")
 
         _insert_df(updated_df, API_FULL_PATH)
 
@@ -99,11 +98,11 @@ def _read_probable_cve_data(triage_subdir, cve_model_type, s3_upload, ecosystem)
     dataset = os.path.join(triage_results_dir, filename)
 
     if not s3_upload:
-        log.info("Reading {} dataset from local folder:{}".format(cc.PROBABLE_CVES, dataset))
+        log.info("Reading {} dataset from local folder: {}".format(cc.PROBABLE_CVES, dataset))
         df = pd.read_csv(dataset, index_col=None, header=0)
     else:
         s3_path = cc.S3_FILE_PATH.format(bucket_name=cc.S3_BUCKET_NAME_INFERENCE, triage_dir=triage_subdir,
                                          dataset_filename=filename)
-        log.info("Reading {} dataset from s3:{}".format(cc.PROBABLE_CVES, s3_path))
+        log.info("Reading {} dataset from ".format(cc.PROBABLE_CVES, s3_path))
         df = pd.read_csv(s3_path, index_col=None, header=0)
     return df
