@@ -76,6 +76,9 @@ def _update_df(df: pd.DataFrame, ecosystem: str) -> pd.DataFrame:
         df['status'] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
         df['ecosystem'] = ecosystem.upper()
         df['probable_cve'] = df.apply(lambda x: _get_probabled_cve(x['cve_model_flag']), axis=1)
+        df['updated_at'] = df['updated_at'].astype(str)
+
+    logging.info(df.head(10).to_string())
     return df.where(pd.notnull(df), None)
 
 
