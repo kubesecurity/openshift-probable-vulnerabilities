@@ -12,6 +12,7 @@ from utils import aws_utils as aws
 from utils import cloud_constants as cc
 from utils.bq_utils import get_bq_data_for_inference
 from utils.storage_utils import write_output_csv
+from utils.api_util import save_data_to_db
 
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
@@ -53,6 +54,9 @@ def main():
         df=df,
         s3_upload=S3_UPLOAD,
     )
+
+    # Save data to database using api server
+    save_data_to_db(df, start_time, end_time, S3_UPLOAD, ECOSYSTEM)
 
 
 # noinspection PyTypeChecker

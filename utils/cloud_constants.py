@@ -71,3 +71,9 @@ MODEL_ASSETS = {
 }
 
 INFERENCE_DROP_DESCRIPTIONS = os.environ.get("INFERENCE_DROP_DESCRIPTIONS", "True")
+
+BASE_TRIAGE_DIR = os.environ.get("BASE_TRIAGE_DIR", "/data_assets/triaged_datasets")
+
+OSA_API_SERVER_HOST = os.environ.get("OSA_API_SERVER_HOST", "osa-api-server")
+OSA_API_SERVER_PORT = os.environ.get("OSA_API_SERVER_PORT", 5000)
+OSA_API_SERVER_URL = 'http://{host}:{port}'.format(host=OSA_API_SERVER_HOST, port=OSA_API_SERVER_PORT)
