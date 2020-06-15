@@ -1,4 +1,4 @@
-# OSA API Server QA Scripts 
+# Openshift Probable Vulnerabilities QA Scripts
 
 This Section explains how we can run different qa scripts
 
@@ -133,4 +133,4 @@ Please see [the following link](https://github.com/koalaman/shellcheck) for furt
 
 Code coverage is reported via the codecov.io. The results can be seen on the following address:
 
-[code coverage report](https://codecov.io/gh/kubesecurity/osa-api-server/)
+[code coverage report](https://codecov.io/gh/kubesecurity/openshift-probable-vulnerabilities/)
