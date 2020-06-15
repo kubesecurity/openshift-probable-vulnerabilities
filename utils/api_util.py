@@ -95,7 +95,7 @@ def _read_probable_cve_data(triage_subdir, cve_model_type, s3_upload, ecosystem)
     triage_results_dir = os.path.join(cc.BASE_TRIAGE_DIR, triage_subdir)
     file_prefix = get_file_prefix(cve_model_type)
     filename = cc.OUTPUT_FILE_NAME.format(data_type=cc.PROBABLE_CVES, file_prefix=file_prefix,
-                                          new_triage_subdir=triage_subdir, ecosystem=ecosystem)
+                                          triage_dir=triage_subdir, ecosystem=ecosystem)
     dataset = os.path.join(triage_results_dir, filename)
 
     if not s3_upload:
