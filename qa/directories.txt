@@ -1,4 +1,5 @@
-src
+model_inference_triage_pipeline
+models
 tests
 tools
-load_test
+training

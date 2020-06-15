@@ -1,3 +1,5 @@
+"""Module to handle triage result upload to Object store."""
+
 from utils import aws_utils as aws
 from utils import cloud_constants as cc
 import os
@@ -7,7 +9,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-ts", "--triage-subfolder", type=str,
-                    help="The specific triage sub-folder to upload to S3. Folder format is YYYYMMDD-YYYYMMDD.")
+                    help=("The specific triage sub-folder to upload to S3."
+                          "Folder format is YYYYMMDD-YYYYMMDD."))
 args = parser.parse_args()
 TRIAGE_SUBFOLDER = args.triage_subfolder
 
@@ -23,9 +26,11 @@ s3_bucket = s3_obj.Bucket(bucket_name)
 BASE_TRIAGE_DIR = './triaged_datasets'
 
 # CHANGE NEEDED
-# You need to specify the folder you want to upload back to S3 after manual triage
+# You need to specify the folder you want to upload back to S3 after manual
+# triage.
 # This should be a sub-folder under triaged-datasets in your directory
-# either modify it here or use the -ts or --triage-subfolder argument when running the script.
+# either modify it here or use the -ts or --triage-subfolder argument when
+# running the script.
 NEW_TRIAGE_SUBDIR = TRIAGE_SUBFOLDER or '20190526-20190528'
 
 # No need to change this

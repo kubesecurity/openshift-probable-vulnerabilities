@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains the constants for interaction with AWS/Minio.
-Note: Please don't add keys directly here, refer to environment variables
-"""
+"""This file contains the constants for interaction with AWS/Minio."""
 
 import os
 import string

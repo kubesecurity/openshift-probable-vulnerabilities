@@ -1,3 +1,5 @@
+"""Invokes inference pipeline and uploads result to Object store."""
+
 import argparse
 import logging
 import sys
@@ -20,7 +22,7 @@ warnings.simplefilter(action="ignore", category=Warning)
 
 
 def main():
-    """The main program logic."""
+    """Entry point for inference pipeline."""
     parser = get_argument_parser()
     args = parser.parse_args()
 
@@ -57,23 +59,27 @@ def main():
 
 # noinspection PyTypeChecker
 def get_argument_parser():
-    """Defines all the command line arguments for the program."""
+    """Define all the command line arguments for the program."""
     description: str = textwrap.dedent(
         """
-        This script can be used to run our AI models for probable vulnerability predictions.
-        Check usage patterns below.
+        This script can be used to run our AI models for probable vulnerability
+        predictions. Check usage patterns below.
         """
     )
     epilog: str = textwrap.dedent(
         """
          Usage patterns for inference script
          -----------------------------------
-         The -days flag should be used with number of prev days data you want to pull
+         The -days flag should be used with number of prev days data you want
+         to pull
 
-         1. GRU Models (Baseline): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=gru
-         2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu -sec-model=gru -cve-model=bert
+         1. GRU Models (Baseline): python run_model_inference.py -days=7
+                                    -device=gpu -sec-model=gru -cve-model=gru
+         2. BERT Model (CVE): python run_model_inference.py -days=7 -device=gpu
+                                    -sec-model=gru -cve-model=bert
          3. CPU inference:
-                python run_model_inference.py -days=7 -device=cpu -sec-model=gru -cve-model=gru
+                python run_model_inference.py -days=7 -device=cpu
+                                    -sec-model=gru -cve-model=gru
          """
     )
     parser = argparse.ArgumentParser(
@@ -88,7 +94,8 @@ def get_argument_parser():
         "--days-since-yday",
         type=int,
         default=7,
-        help="The number of days worth of data to retrieve from GitHub including yesterday",
+        help=("The number of days worth of data to retrieve from GitHub"
+              "including yesterday"),
     )
 
     parser.add_argument(
@@ -106,7 +113,8 @@ def get_argument_parser():
         type=str,
         default="gpu",
         choices=["gpu", "cpu", "GPU", "CPU"],
-        help="[Not implemented should work automatically] The backend device to run the AI models on - GPU or CPU",
+        help=("[Not implemented should work automatically] The backend device"
+              "to run the AI models on - GPU or CPU"),
     )
 
     parser.add_argument(
@@ -133,30 +141,31 @@ def get_argument_parser():
         type=bool,
         default=False,
         choices=[False, True],
-        help=(
-            "Uploads inference CSVs to S3 bucket - should have write access to the appropriate S3 bucket."
-        ),
+        help=("Uploads inference CSVs to S3 bucket - should have write access"
+              "to the appropriate S3 bucket."),
     )
 
     parser.add_argument(
         "-sd",
         "--start-date",
         default="",
-        help="If running for a custom interval, set this and the [end-date] in yyyy-mm-dd format.",
+        help=("If running for a custom interval, set this and the end-date"
+              "in yyyy-mm-dd format."),
     )
 
     parser.add_argument(
         "-ed",
         "--end-date",
         default="",
-        help="If running for a custom interval, set this and the [start-date] in yyyy-mm-dd format.",
+        help=("If running for a custom interval, set this and the start-date"
+              "in yyyy-mm-dd format."),
     )
 
     return parser
 
 
 def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
-    """Sets up the date range for data retireval."""
+    """Prepare date range for triage."""
     # ======= DATES SETUP FOR GETTING GITHUB BQ DATA ========
     _logger.info("----- DATES SETUP FOR GETTING GITHUB BQ DATA -----")
     if start_date_user != "" and end_date_user != "":
@@ -164,7 +173,9 @@ def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
         end_time = arrow.get(end_date_user, "YYYY-MM-DD")
         day_count = (end_time - start_time).days
         date_range = [
-            dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day", start_time, end_time)
+            dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day",
+                                                              start_time,
+                                                              end_time)
         ]
         return day_count, start_time, end_time, date_range
 
@@ -173,12 +184,16 @@ def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
 
     # CHANGE NEEDED
     # to get data for N days back starting from YESTERDAY
-    # e.g if today is 20190528 and DURATION DAYS = 2 -> BQ will get data for 20190527, 20190526
-    # We don't get data for PRESENT DAY since github data will be incomplete on the same day
+    # e.g if today is 20190528 and DURATION DAYS = 2 -> BQ will get data for
+    # 20190527, 20190526.
+    # We don't get data for PRESENT DAY since github data will be incomplete on
+    # the same day.
     # But you can get it if you want but better not to for completeness :)
 
-    # You can set this directly from command line using the -d or --days-since-yday argument
-    day_count = days_since_yday or 3  # Gets 3 days of previous data including YESTERDAY
+    # You can set this directly from command line using the
+    # -d or --days-since-yday argument
+    # Gets 3 days of previous data including YESTERDAY
+    day_count = days_since_yday or 3
 
     # Don't change this
     # Start time for getting data
@@ -190,16 +205,19 @@ def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
     # but it is not advised as data will be incomplete
     end_time = present_time.shift(days=-1)
 
-    date_range = [dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day", start_time, end_time)]
-    _logger.info(
-        "Data will be retrieved for Last N={n} days: {days}\n".format(n=day_count, days=date_range)
-    )
+    date_range = [dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day",
+                                                                    start_time,
+                                                                    end_time)]
+    _logger.info("Data will be retrieved for Last N=%d days: %d\n",
+                 day_count, date_range)
     return day_count, start_time, end_time, date_range
 
 
 def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
+    """Run inference pipeline."""
     if cc.S3_MODEL_REFRESH.lower() == "true":
-        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
+        aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL),
+                               "model_assets", "/")
 
     if "torch" not in CVE_MODEL_TYPE.lower():
         from models.run_tf_models import (
@@ -218,7 +236,8 @@ def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
         from models.run_torch_model import run_torch_cve_model_bert
         from models.run_tf_models import run_tensorflow_security_classifier
 
-        # Re-use the GRU based security/non-security classifier then pipe its output to the new BERT model.
+        # Re-use the GRU based security/non-security classifier then pipe its
+        # output to the new BERT model.
         df = run_torch_cve_model_bert(run_tensorflow_security_classifier(df))
     return df
 
