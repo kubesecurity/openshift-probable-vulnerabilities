@@ -73,7 +73,6 @@ def run_tensorflow_security_classifier(df: pd.DataFrame):
 
 def run_bert_tensorflow_model(df: pd.DataFrame):
     """Run CVE classifier using the bert-tensorflow BERT model."""
-    df = run_tensorflow_security_classifier(df)
     _logger.info("\n")
 
     _logger.info("Keeping track of probable security issue rows")
@@ -100,6 +99,7 @@ def run_bert_tensorflow_model(df: pd.DataFrame):
     _logger.info("Removing bad docs with low tokens")
     cve_doc_idx = np.argwhere(cve_doc_lengths >= 10).ravel()
     filtered_cve_encoded_docs = cve_encoded_docs[cve_doc_idx]
+    _logger.info("Security encoded docs before filtering: {}".format(len(cve_encoded_docs)))
     _logger.info("Filtered CVE Docs Encoded: {n}".format(n=len(filtered_cve_encoded_docs)))
 
     _logger.info("BERT text processing and feature engineering")
