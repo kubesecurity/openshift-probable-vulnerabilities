@@ -87,10 +87,10 @@ def save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, d
 
     if not s3_upload:
         dataset = os.path.join(new_triage_results_dir, filename)
-        _logger.info("Saving {} dataset locally:{}".format(type, dataset))
+        _logger.info("Saving {} dataset locally:{}".format(data_type, dataset))
         df.to_csv(dataset, index=False)
     else:
         s3_path = cc.S3_FILE_PATH.format(bucket_name=cc.S3_BUCKET_NAME_INFERENCE, triage_dir=new_triage_subdir,
                                          dataset_filename=filename)
         df.to_csv(s3_path, index=False)
-        _logger.info("Saving {} dataset to S3: {}".format(type, s3_path))
+        _logger.info("Saving {} dataset to S3: {}".format(data_type, s3_path))
