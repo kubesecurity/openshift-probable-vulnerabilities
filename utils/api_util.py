@@ -71,7 +71,7 @@ def _get_status_type(status: str) -> str:
 
 def _update_df(df: pd.DataFrame, ecosystem: str) -> pd.DataFrame:
     df = df[df.cve_model_flag == 1]
-    df['status'] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
+    # df['status'] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
     df['ecosystem'] = ecosystem.upper()
     df['probable_cve'] = df.apply(lambda x: _get_probabled_cve(x['cve_model_flag']), axis=1)
     return df.where(pd.notnull(df), None)
@@ -83,10 +83,12 @@ def _get_probabled_cve(cve_model_flag: int) -> bool:
 
 def save_data_to_db(df: pd.DataFrame, start_time: datetime, end_time: datetime, s3_upload, ecosystem):
     """Save data to database using api server."""
-    logging.info("totoal data count :{count}".format(count=str(df.shape[0])))
+    logging.info("total data count :{count}".format(count=str(df.shape[0])))
+
+    logging.info(df.head(10).to_string())
 
     updated_df = _update_df(df, ecosystem)
-    logging.info("pccve data count :{count}".format(count=str(updated_df.shape[0])))
+    logging.info("pcve data count :{count}".format(count=str(updated_df.shape[0])))
 
     logging.info("update df completed")
 
