@@ -4,6 +4,12 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 pushd "${SCRIPT_DIR}/.."
 
+# list of directories with sources to check
+directories=$(cat ${SCRIPT_DIR}/directories.txt)
+
+# list of separate files to check
+separate_files=$(cat ${SCRIPT_DIR}/files.txt)
+
 function prepare_venv() {
     VIRTUALENV=$(which virtualenv)
     if [ $? -eq 1 ]; then
@@ -21,13 +27,13 @@ function prepare_venv() {
 
 [ "$NOVENV" == "1" ] || prepare_venv || exit 1
 
-radon cc -s -a -i venv .
+radon cc -s -a -i venv ${directories} ${separate_files}
 
 popd
 
 if [[ "$1" == "--fail-on-error" ]]
 then
-    defects="$(radon cc -s -n D -i venv . | wc -l)"
+    defects="$(radon cc -s -n D -i venv ${directories} ${separate_files} | wc -l)"
     if [[ $defects -gt 0 ]]
     then
         echo "File(s) with too high cyclomatic complexity detected!"
