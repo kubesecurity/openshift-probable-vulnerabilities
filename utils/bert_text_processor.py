@@ -1,12 +1,11 @@
 """Functions for text processing and feature engineering for BERT models."""
 
 import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)  # noqa
 import bert
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as tf_hub
-from bert import tokenization
 from tensorflow.keras import backend as K
 from tqdm import tqdm
 
@@ -44,10 +43,10 @@ class InputExample:
 
         Args:
           guid: Unique id for the example.
-          text_a: string. The untokenized text of the first sequence. For single
-            sequence tasks, only this sequence must be specified.
-          text_b: (Optional) string. The untokenized text of the second sequence.
-            Only must be specified for sequence pair tasks.
+          text_a: string. The untokenized text of the first sequence.
+            For single sequence tasks, only this sequence must be specified.
+          text_b: (Optional) string. The untokenized text of the second
+            sequence. Only must be specified for sequence pair tasks.
           label: (Optional) string. The label of the example. This should be
             specified for train and dev examples, but not for test examples.
         """
@@ -72,12 +71,12 @@ class BertTextProcessor:
         self.segment_ids = None
         self.labels = None
 
-
     def create_bert_tokenizer(self):
         """Get vocab file and casing info from BERT tensorflow hub model."""
         print('Loading Base BERT Model')
-        bert_model =  tf_hub.Module(self.bert_path)
-        tokenization_info = bert_model(signature="tokenization_info", as_dict=True)
+        bert_model = tf_hub.Module(self.bert_path)
+        tokenization_info = bert_model(signature="tokenization_info",
+                                       as_dict=True)
         vocab_file, do_lower_case = self.tf_sess.run(
             [
                 tokenization_info["vocab_file"],
@@ -86,8 +85,7 @@ class BertTextProcessor:
         )
         print('Loading BERT WordPiece Tokenizer')
         self.tokenizer = bert.tokenization.FullTokenizer(vocab_file=vocab_file,
-                                                         do_lower_case=do_lower_case)
-
+                                                         do_lower_case=do_lower_case)  # noqa
 
     def convert_text_to_input_examples(self, texts, labels=[]):
         """
@@ -98,11 +96,11 @@ class BertTextProcessor:
         """
         labels = labels or [None] * len(texts)
         print('Creating Input Examples from data')
-        for text, label in tqdm(zip(texts, labels), desc="Converting text to examples"):
+        for text, label in tqdm(zip(texts, labels),
+                                desc="Converting text to examples"):
             self.input_examples.append(
                 InputExample(guid=None, text_a=text, text_b=None, label=label)
             )
-
 
     def convert_single_example(self, tokenizer, example, max_seq_length):
         """
@@ -126,7 +124,7 @@ class BertTextProcessor:
 
         tokens_a = tokenizer.tokenize(example.text_a)
         if len(tokens_a) > max_seq_length - 2:
-            tokens_a = tokens_a[0 : (max_seq_length - 2)]
+            tokens_a = tokens_a[0:(max_seq_length - 2)]
 
         tokens = []
         segment_ids = []
@@ -160,7 +158,6 @@ class BertTextProcessor:
 
         return input_ids, input_mask, segment_ids, example.label
 
-
     def convert_examples_to_features(self):
         """
         Convert a set of `InputExample` instancess to a list.
@@ -170,8 +167,9 @@ class BertTextProcessor:
         """
         print('Creating BERT Input Features from Input Examples')
         input_ids, input_masks, segment_ids, labels = [], [], [], []
-        for example in tqdm(self.input_examples, desc="Converting examples to features"):
-            input_id, input_mask, segment_id, label = self.convert_single_example(
+        for example in tqdm(self.input_examples,
+                            desc="Converting examples to features"):
+            input_id, input_mask, segment_id, label = self.convert_single_example(  # noqa
                 self.tokenizer, example, self.max_seq_length
             )
             input_ids.append(input_id)

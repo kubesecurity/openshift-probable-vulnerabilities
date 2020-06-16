@@ -1,5 +1,2 @@
 model_inference_triage_pipeline
-models
 tests
-tools
-training

@@ -7,7 +7,7 @@ pushd "${SCRIPT_DIR}/.." > /dev/null
 set -e
 set -x
 
-COVERAGE_THRESHOLD=75
+COVERAGE_THRESHOLD=24
 
 export TERM=xterm
 
@@ -39,7 +39,7 @@ function prepare_venv() {
         exit 1
     fi
     pip install -U pip
-    python3 "$(which pip3)" install -r requirements.txt
+    python3 "$(which pip3)" install -r model_inference_triage_pipeline/requirements.txt
 
 }
 
@@ -47,9 +47,13 @@ check_python_version
 
 [ "$NOVENV" == "1" ] || prepare_venv || exit 1
 
-$(which pip3) install -r requirements-test.txt
+# $(which pip3) install -r requirements-test.txt
+pip3 install pytest
+pip3 install pytest-cov
+pip3 install radon
+pip3 install codecov
 
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=`pwd` python3 "$(which pytest)" --cov=src/ --cov-report term-missing --cov-fail-under=$COVERAGE_THRESHOLD -vv tests/
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=`pwd` python3 "$(which pytest)" --cov=. --cov-report term-missing --cov-fail-under=$COVERAGE_THRESHOLD -vv tests/
 
 codecov --token=4c49034f-36ec-4e2c-b839-6e0f615aaebe
 printf "%stests passed%s\n\n" "${GREEN}" "${NORMAL}"

@@ -1,6 +1,5 @@
 """Contains text normalization functions."""
 
-import numpy as np
 import contractions
 from bs4 import BeautifulSoup
 import unicodedata
