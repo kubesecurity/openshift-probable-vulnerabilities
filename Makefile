@@ -1,5 +1,5 @@
 
-DOCKERFILE := Dockerfile
+DOCKERFILE := deployment/Dockerfile
 REGISTRY := quay.io
 REPOSITORY := openshiftio/openshift-probable-vulnerabilities
 DEFAULT_TAG=latest
