@@ -36,6 +36,10 @@ objects:
             value: ${DAYS}
           - name: CVE_MODEL
             value: ${CVE_MODEL}
+          - name: OSA_API_SERVER_HOST
+            value: ${OSA_API_SERVER_HOST}
+          - name: OSA_API_SERVER_PORT
+            value: ${OSA_API_SERVER_PORT}
           - name: BIGQUERY_CREDENTIALS_FILEPATH
             value: "/etc/credentials/gcloud/google-services.json"
           - name: AWS_ACCESS_KEY_ID
@@ -97,7 +101,7 @@ parameters:
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "avgupta/bert-inference"
+  value: "rajusem/bert-inference"
 
 - description: Image tag
   displayName: Image tag
@@ -115,7 +119,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "14"
+  value: "7"
 
 - displayName: "Model bucket Name"
   description: Name of the bucket which contains the model
@@ -127,10 +131,23 @@ parameters:
   displayName: Inference bucket name
   required: true
   name: AWS_BUCKET_NAME_INFERENCE
-  value: "avgupta-dev-gokube-triage"
+  value: "rzalavad-inference-output"
 
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
   required: true
   name: CVE_MODEL
   value: "bert_torch"
+
+- description: "OSA API Server Host"
+  displayName: OSA API Server Host
+  required: true
+  name: OSA_API_SERVER_HOST
+  value: "osa-api-server"
+
+- description: "OSA API Server Port"
+  displayName: OSA API Server Port
+  required: true
+  name: OSA_API_SERVER_PORT
+  value: "5000"
+
