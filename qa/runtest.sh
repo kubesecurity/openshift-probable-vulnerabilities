@@ -7,7 +7,7 @@ pushd "${SCRIPT_DIR}/.." > /dev/null
 set -e
 set -x
 
-COVERAGE_THRESHOLD=24
+COVERAGE_THRESHOLD=14
 
 export TERM=xterm
 
@@ -53,9 +53,9 @@ pip3 install pytest-cov
 pip3 install radon
 pip3 install codecov
 
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=`pwd` python3 "$(which pytest)" --cov=. --cov-report term-missing --cov-fail-under=$COVERAGE_THRESHOLD -vv tests/
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=`pwd` python3 "$(which pytest)" --cov=model_inference_triage_pipeline --cov=utils --cov=tests --cov-report term-missing --cov-fail-under=$COVERAGE_THRESHOLD -vv tests
 
-codecov --token=4c49034f-36ec-4e2c-b839-6e0f615aaebe
+codecov --token=72315105-7ad8-42c3-965e-64bb328e747a
 printf "%stests passed%s\n\n" "${GREEN}" "${NORMAL}"
 
 
