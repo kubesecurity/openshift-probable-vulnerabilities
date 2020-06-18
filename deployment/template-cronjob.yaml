@@ -12,8 +12,8 @@ objects:
   metadata:
     name: bert-inference
   spec:
-    # Run everyday at midnight.
-    schedule: "0 0 * * *"
+    # Run every monday 1.am
+    schedule: "0 1 * * MON"
     startingDeadlineSeconds: 200
     successfulJobsHistoryLimit: 5
     failedJobsHistoryLimit: 5
@@ -130,7 +130,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "14"
+  value: "7"
 
 - displayName: "Model bucket Name"
   description: Name of the bucket which contains the model
