@@ -46,6 +46,10 @@ objects:
                 value: "/etc/credentials/gcloud/google-services.json"
               - name: CVE_MODEL
                 value: ${CVE_MODEL}
+              - name: OSA_API_SERVER_HOST
+                value: ${OSA_API_SERVER_HOST}
+              - name: OSA_API_SERVER_PORT
+                value: ${OSA_API_SERVER_PORT}
               - name: AWS_ACCESS_KEY_ID
                 valueFrom:
                   secretKeyRef:
@@ -142,3 +146,15 @@ parameters:
   required: true
   name: CVE_MODEL
   value: "bert_torch"
+
+- description: "OSA API Server Host"
+  displayName: OSA API Server Host
+  required: true
+  name: OSA_API_SERVER_HOST
+  value: "osa-api-server"
+
+- description: "OSA API Server Port"
+  displayName: OSA API Server Port
+  required: true
+  name: OSA_API_SERVER_PORT
+  value: "5000"

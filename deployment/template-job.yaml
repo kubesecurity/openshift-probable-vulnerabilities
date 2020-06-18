@@ -101,7 +101,7 @@ parameters:
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "rajusem/bert-inference"
+  value: "avgupta/bert-inference"
 
 - description: Image tag
   displayName: Image tag
@@ -119,7 +119,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "7"
+  value: "14"
 
 - displayName: "Model bucket Name"
   description: Name of the bucket which contains the model
@@ -131,7 +131,7 @@ parameters:
   displayName: Inference bucket name
   required: true
   name: AWS_BUCKET_NAME_INFERENCE
-  value: "rzalavad-inference-output"
+  value: "avgupta-dev-gokube-triage"
 
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
