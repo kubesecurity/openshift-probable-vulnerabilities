@@ -208,7 +208,7 @@ def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
     date_range = [dt.format("YYYYMMDD") for dt in arrow.Arrow.range("day",
                                                                     start_time,
                                                                     end_time)]
-    _logger.info("Data will be retrieved for Last N=%d days: %d\n",
+    _logger.info("Data will be retrieved for Last N=%d days: %s\n",
                  day_count, date_range)
     return day_count, start_time, end_time, date_range
 
