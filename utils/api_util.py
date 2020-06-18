@@ -74,7 +74,7 @@ def _update_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def save_data_to_db(start_time: datetime, end_time: datetime, cve_model_type: str, s3_upload: bool, ecosystem: str):
-    """Save probable cve data to db via api server"""
+    """Save probable cve data to db via api server."""
     triage_subdir = cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
                                                 end_time=end_time.format("YYYYMMDD"))
     df = _read_probable_cve_data(triage_subdir, cve_model_type, s3_upload, ecosystem)
@@ -87,7 +87,7 @@ def save_data_to_db(start_time: datetime, end_time: datetime, cve_model_type: st
         _insert_df(updated_df, API_FULL_PATH)
 
         # Save data to csv file those are failed to ingest
-        _report_failures(df, triage_subdir,  ecosystem, s3_upload)
+        _report_failures(df, triage_subdir, ecosystem, s3_upload)
     else:
         log.info("No PCVE records to save for {}".format(ecosystem))
 
