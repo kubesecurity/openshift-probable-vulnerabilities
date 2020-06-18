@@ -67,6 +67,7 @@ objects:
                   mountPath: "/etc/credentials/"
                   readOnly: true
               image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+              imagePullPolicy: Always
               name: openshift-probable-vulnerabilities
               resources:
                 requests:
