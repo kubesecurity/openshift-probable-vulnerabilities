@@ -56,7 +56,8 @@ def main():
     )
 
     # Save data to database using api server
-    save_data_to_db(start_time, end_time, CVE_MODEL_TYPE, S3_UPLOAD, ECOSYSTEM)
+    if not cc.SKIP_INSERT_API_CALL:
+        save_data_to_db(start_time, end_time, CVE_MODEL_TYPE, S3_UPLOAD, ECOSYSTEM)
 
 
 # noinspection PyTypeChecker

@@ -72,6 +72,7 @@ MODEL_ASSETS = {
 
 INFERENCE_DROP_DESCRIPTIONS = os.environ.get("INFERENCE_DROP_DESCRIPTIONS", "True")
 
+SKIP_INSERT_API_CALL = os.environ.get("SKIP_INSERT_API_CALL", "false").lower() == "true"
 BASE_TRIAGE_DIR = os.environ.get("BASE_TRIAGE_DIR", "/data_assets/triaged_datasets")
 NEW_TRIAGE_SUBDIR = "{stat_time}-{end_time}"
 S3_FILE_PATH = "s3://{bucket_name}/triaged_datasets/{triage_dir}/{dataset_filename}"
@@ -85,3 +86,4 @@ FAILED_TO_INSERT = "failed_to_insert"
 OSA_API_SERVER_HOST = os.environ.get("OSA_API_SERVER_HOST", "osa-api-server")
 OSA_API_SERVER_PORT = os.environ.get("OSA_API_SERVER_PORT", 5000)
 OSA_API_SERVER_URL = 'http://{host}:{port}'.format(host=OSA_API_SERVER_HOST, port=OSA_API_SERVER_PORT)
+DATA_INSERT_CONCURRENCY = int(os.environ.get("DATA_INSERT_CONCURRENCY", 10))

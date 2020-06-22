@@ -1,17 +1,18 @@
 """Ingests historical CSV data into DB."""
 
+import asyncio
 import json
+import logging
 import os
-from datetime import datetime
 
 import daiquiri
 import pandas as pd
-import requests
+from aiohttp import ClientSession
 
 from utils import cloud_constants as cc
 from utils.storage_utils import get_file_prefix, save_data_to_csv
 
-log = daiquiri.getLogger(__name__)
+log = daiquiri.getLogger(level=logging.INFO)
 
 INSERT_API_PATH = "/api/v1/pcve"
 API_FULL_PATH = "{host}{api}".format(host=cc.OSA_API_SERVER_URL, api=INSERT_API_PATH)
@@ -33,18 +34,26 @@ def _report_failures(df: pd.DataFrame, triage_subdir: str, s3_upload: bool, ecos
         log.info("Failed data saved successfully.")
 
 
-def _insert_df(df: pd.DataFrame, url: str):
-    """Call API server and insert data."""
+async def _insert_df(df, url, session: ClientSession, sem):
+    """Wrapper call for API call to insert data"""
     objs = df.to_dict(orient='records')
+    tasks = []
     for obj in objs:
-        result = requests.post(url, json=obj)
-        log.debug('Got response {} for {}'.format(result.status_code, obj["url"]))
-        if result.status_code != 200:
-            log.error('Error response: {}, msg: {}, data: {}'
-                      .format(result.status_code, result.json()["message"], json.dumps(obj)))
-            failed_to_insert.append(obj["url"])
+        task = asyncio.ensure_future(_add_data(obj=obj, session=session, url=url, sem=sem))
+        tasks.append(task)
+    await asyncio.gather(*tasks)
 
     log.info("Record insertion completed.")
+
+
+async def _add_data(obj, session: ClientSession, url, sem):
+    """Call API server and insert data."""
+    async with sem, session.post(url, json=obj) as response:
+        log.info('Got response {} for {}'.format(response.status, obj["url"]))
+        if response.status != 200:
+            failed_to_insert.append(obj["url"])
+            log.error('Error response {}, msg {}, data: {}'
+                      .format(response.status, await response.text(), json.dumps(obj)))
 
 
 def _get_status_type(status: str) -> str:
@@ -62,18 +71,14 @@ def _get_probabled_cve(cve_model_flag: int) -> bool:
 
 def _update_df(df: pd.DataFrame) -> pd.DataFrame:
     """Update few property of the dataframe to make it work with API sevrer."""
-    df['ecosystem'] = df['ecosystem'].str.upper()
-    df['status'] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
-
-    if 'cve_model_flag' not in df:
-        df['probable_cve'] = True
-    else:
-        df['probable_cve'] = df.apply(lambda x: _get_probabled_cve(x['cve_model_flag']), axis=1)
+    df.loc[:, "ecosystem"] = df['ecosystem'].str.upper()
+    df.loc[:, "status"] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
+    df.loc[:, "probable_cve"] = df.apply(lambda x: _get_probabled_cve(x['cve_model_flag']), axis=1)
 
     return df.where(pd.notnull(df), None)
 
 
-def save_data_to_db(start_time: datetime, end_time: datetime, cve_model_type: str, s3_upload: bool, ecosystem: str):
+async def _update_and_save(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
     """Save probable cve data to db via api server."""
     triage_subdir = cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
                                                 end_time=end_time.format("YYYYMMDD"))
@@ -84,12 +89,25 @@ def save_data_to_db(start_time: datetime, end_time: datetime, cve_model_type: st
         updated_df = _update_df(df)
         log.info("Update df completed")
 
-        _insert_df(updated_df, API_FULL_PATH)
+        sem = asyncio.BoundedSemaphore(cc.DATA_INSERT_CONCURRENCY)
+
+        async with ClientSession() as session:
+            await _insert_df(updated_df, API_FULL_PATH, session, sem)
 
         # Save data to csv file those are failed to ingest
-        _report_failures(df, triage_subdir, ecosystem, s3_upload)
+        _report_failures(df, triage_subdir, s3_upload, ecosystem)
     else:
-        log.info("No PCVE records to save for {}".format(ecosystem))
+        log.info("No PCVE records to insert for {}".format(ecosystem))
+
+
+def save_data_to_db(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
+    """Main method call to save probable cve data to db via api server."""
+    loop = asyncio.new_event_loop()
+    # (todo) Use asyncio.run after moving to Python 3.7+
+    try:
+        loop.run_until_complete(_update_and_save(start_time, end_time, cve_model_type, s3_upload, ecosystem))
+    finally:
+        loop.close()
 
 
 def _read_probable_cve_data(triage_subdir: str, cve_model_type: str, s3_upload: bool, ecosystem: str):
