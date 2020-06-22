@@ -135,24 +135,23 @@ def get_argument_parser():
         type=bool,
         default=False,
         choices=[False, True],
-        help=("Uploads inference CSVs to S3 bucket - should have write access"
-              "to the appropriate S3 bucket."),
+        help=(
+            "Uploads inference CSVs to S3 bucket - should have write access to the appropriate S3 bucket."
+        ),
     )
 
     parser.add_argument(
         "-sd",
         "--start-date",
         default="",
-        help=("If running for a custom interval, set this and the end-date"
-              "in yyyy-mm-dd format."),
+        help="If running for a custom interval, set this and the end-date in yyyy-mm-dd format.",
     )
 
     parser.add_argument(
         "-ed",
         "--end-date",
         default="",
-        help=("If running for a custom interval, set this and the start-date"
-              "in yyyy-mm-dd format."),
+        help="If running for a custom interval, set this and the start-date in yyyy-mm-dd format.",
     )
 
     return parser

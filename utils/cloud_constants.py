@@ -55,7 +55,7 @@ P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH = os.environ.get(
 
 S3_MODEL_REFRESH = os.environ.get("S3_MODEL_REFRESH", "True")
 
-# TODO: Use this constant later to not download everything to disk, # leave it for now disk is not a problem.
+# TODO: Use this constant later to not download everything to disk, leave it for now disk is not a problem.
 MODEL_ASSETS = {
     "sec_model": [
         P1GRU_SEC_MODEL_TOKENIZER_PATH.lstrip("/"),

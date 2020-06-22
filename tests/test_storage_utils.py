@@ -37,8 +37,7 @@ class TestStorageUtils(TestCase):
         df = write_output_csv(start, end, "bert_torch", "knative", df, False)
         # Check if CSV local creation happens normally.
         to_mock_csv.assert_called_with(
-            ("test/{}-{}/"
-             "bert_model_inference_probable_cves_{}-{}_knative.csv").format(
+            "test/{}-{}/bert_model_inference_probable_cves_{}-{}_knative.csv".format(
                 start.format("YYYYMMDD"),
                 end.format("YYYYMMDD"),
                 start.format("YYYYMMDD"),
