@@ -49,6 +49,7 @@ class InputExample:
             sequence. Only must be specified for sequence pair tasks.
           label: (Optional) string. The label of the example. This should be
             specified for train and dev examples, but not for test examples.
+
         """
         self.guid = guid
         self.text_a = text_a
@@ -75,8 +76,7 @@ class BertTextProcessor:
         """Get vocab file and casing info from BERT tensorflow hub model."""
         print('Loading Base BERT Model')
         bert_model = tf_hub.Module(self.bert_path)
-        tokenization_info = bert_model(signature="tokenization_info",
-                                       as_dict=True)
+        tokenization_info = bert_model(signature="tokenization_info", as_dict=True)
         vocab_file, do_lower_case = self.tf_sess.run(
             [
                 tokenization_info["vocab_file"],
@@ -85,11 +85,10 @@ class BertTextProcessor:
         )
         print('Loading BERT WordPiece Tokenizer')
         self.tokenizer = bert.tokenization.FullTokenizer(vocab_file=vocab_file,
-                                                         do_lower_case=do_lower_case)  # noqa
+                                                         do_lower_case=do_lower_case)
 
     def convert_text_to_input_examples(self, texts, labels=[]):
-        """
-        Create InputExamples.
+        """Create InputExamples.
 
         It is based on instances of the
         bert.run_classifier.InputExample class.
@@ -103,8 +102,7 @@ class BertTextProcessor:
             )
 
     def convert_single_example(self, tokenizer, example, max_seq_length):
-        """
-        Convert a single example instance of class InputExample.
+        """Convert a single example instance of class InputExample.
 
         into a single instance of features which consist of the following
             - input_id
@@ -159,8 +157,7 @@ class BertTextProcessor:
         return input_ids, input_mask, segment_ids, example.label
 
     def convert_examples_to_features(self):
-        """
-        Convert a set of `InputExample` instancess to a list.
+        """Convert a set of `InputExample` instancess to a list.
 
         of instances of`InputFeatures` using the
         convert_single_example(...) function.
@@ -169,7 +166,7 @@ class BertTextProcessor:
         input_ids, input_masks, segment_ids, labels = [], [], [], []
         for example in tqdm(self.input_examples,
                             desc="Converting examples to features"):
-            input_id, input_mask, segment_id, label = self.convert_single_example(  # noqa
+            input_id, input_mask, segment_id, label = self.convert_single_example(
                 self.tokenizer, example, self.max_seq_length
             )
             input_ids.append(input_id)

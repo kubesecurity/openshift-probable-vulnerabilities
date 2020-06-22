@@ -54,7 +54,7 @@ run_all_checkers() {
     printf "%sRunning all tests and checkers%s\n" "${YELLOW}" "${NORMAL}"
 
     echo "  Creating log directory  inside 'qa' folder where all err, log file will be dump"
-    mkdir log
+    mkdir -p log
 
     echo "  Check all BASH scripts"
     run_checker check-bashscripts

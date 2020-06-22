@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains the constants that control model parameters.
+"""Contains the constants that control model parameters.
 
 Note: Please don't add keys directly here, refer to environment variables
 """

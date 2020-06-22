@@ -18,15 +18,11 @@ session = boto3.session.Session(aws_access_key_id=_aws_key_id,
                                 aws_secret_access_key=_aws_secret_key,
                                 region_name=_aws_region)
 
-S3_OBJ = session.resource('s3',
-                          config=botocore.client.Config(
-                              signature_version='s3v4'),
+S3_OBJ = session.resource('s3', config=botocore.client.Config(signature_version='s3v4'),
                           use_ssl=True)
 
 
-def s3_download_folder(s3_bucket_obj,
-                       bucket_dir_prefix='',
-                       download_path='./'):
+def s3_download_folder(s3_bucket_obj, bucket_dir_prefix='', download_path='./'):
     """Download the given s3 bucket object."""
     if not os.path.exists(download_path):
         os.makedirs(download_path)
@@ -53,8 +49,7 @@ def s3_upload_folder(folder_path, s3_bucket_obj, prefix=''):
         for filename in filenames:
             if root != '.':
                 s3_dest = os.path.join(prefix,
-                                       Path(root).relative_to(parent_dir),
-                                       filename)
+                                       Path(root).relative_to(parent_dir), filename)
             else:
                 s3_dest = os.path.join(prefix, filename)
             _logger.info('Uploading to: {d}'.format(d=s3_dest))
