@@ -56,6 +56,7 @@ objects:
               mountPath: "/etc/credentials/"
               readOnly: true
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+          imagePullPolicy: Always
           name: openshift-probable-vulnerabilities
           ports:
           - containerPort: ${{API_SERVICE_PORT}}

@@ -1,4 +1,4 @@
-# This script is run on EMR. Change all paths appropriately.
+"""Abstracts training on EMR."""
 import os
 
 import arrow
@@ -7,7 +7,7 @@ import subprocess
 import threading
 
 
-def worker(start, end, ecosystem):
+def _worker(start, end, ecosystem):
     subprocess.run(
         [
             "python3",
@@ -33,12 +33,12 @@ def worker(start, end, ecosystem):
                 "GOKUBE_REPO_LIST": "/home/hadoop/utils/data_assets/golang-repo-list.txt",
                 "KNATIVE_REPO_LIST": "/home/hadoop/utils/data_assets/knative-repo-list.txt",
                 "KUBEVIRT_REPO_LIST": "/home/hadoop/utils/data_assets/kubevirt-repo-list.txt",
-                "BASE_BERT_UNCASED_PATH": "/mnt2/model_assets/gokube-phase2/base_bert_tfhub_models/bert_uncased_L12_H768_A12",
-                "P2BERT_CVE_MODEL_WEIGHTS_PATH": "/mnt2/model_assets/gokube-phase2/saved_models/bert_cve75_weights-ep:02-trn_loss:0.172-trn_acc:0.957-val_loss:0.164-val_acc:0.978.h5",
-                "P1GRU_SEC_MODEL_TOKENIZER_PATH": "/mnt2/model_assets/gokube-phase1-jun19/embeddings/security_tokenizer_word2idx_fulldata.pkl",
-                "P1GRU_SEC_MODEL_WEIGHTS_PATH": "/mnt2/model_assets/gokube-phase1-jun19/saved_models/security_model_train99-jun19_weights.h5",
-                "P1GRU_CVE_MODEL_TOKENIZER_PATH": "/mnt2/model_assets/gokube-phase1-jun19/embeddings/cve_tokenizer_word2idx_fulldata.pkl",
-                "P1GRU_CVE_MODEL_WEIGHTS_PATH": "/mnt2/model_assets/gokube-phase1-jun19/saved_models/cve_model_train99-jun19_weights.h5",
+                "BASE_BERT_UNCASED_PATH": "/mnt2/model_assets/gokube-phase2/base_bert_tfhub_models/bert_uncased_L12_H768_A12",  # noqa
+                "P2BERT_CVE_MODEL_WEIGHTS_PATH": "/mnt2/model_assets/gokube-phase2/saved_models/bert_cve75_weights-ep:02-trn_loss:0.172-trn_acc:0.957-val_loss:0.164-val_acc:0.978.h5",  # noqa
+                "P1GRU_SEC_MODEL_TOKENIZER_PATH": "/mnt2/model_assets/gokube-phase1-jun19/embeddings/security_tokenizer_word2idx_fulldata.pkl",  # noqa
+                "P1GRU_SEC_MODEL_WEIGHTS_PATH": "/mnt2/model_assets/gokube-phase1-jun19/saved_models/security_model_train99-jun19_weights.h5",  # noqa
+                "P1GRU_CVE_MODEL_TOKENIZER_PATH": "/mnt2/model_assets/gokube-phase1-jun19/embeddings/cve_tokenizer_word2idx_fulldata.pkl",  # noqa
+                "P1GRU_CVE_MODEL_WEIGHTS_PATH": "/mnt2/model_assets/gokube-phase1-jun19/saved_models/cve_model_train99-jun19_weights.h5",  # noqa
                 "S3_MODEL_REFRESH": "False",
                 "BASE_TRIAGE_DIR": "/mnt1/triaged_datasets",
                 "P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH": "/mnt2/pytorch-cve-warmup",
@@ -47,7 +47,7 @@ def worker(start, end, ecosystem):
     )
 
 
-def main():
+def _main():
     for ecosystem in ["openshift", "kubevirt", "knative"]:
         start = arrow.get("01-07-2019", "DD-MM-YYYY")
         end = start.shift(days=+6)
@@ -58,7 +58,7 @@ def main():
             print(
                 "Creating for {} to {}".format(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"))
             )
-            pool.append(threading.Thread(target=worker, args=(start, end, ecosystem)))
+            pool.append(threading.Thread(target=_worker, args=(start, end, ecosystem)))
             if len(pool) >= 16:
                 for thread in pool:
                     thread.start()
@@ -76,4 +76,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()

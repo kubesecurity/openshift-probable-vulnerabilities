@@ -45,7 +45,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
         file_prefix=file_prefix, new_triage_subdir=new_triage_subdir, ecosystem=ecosystem
     )
 
-    probable_cve_dataset = os.path.join(new_triage_results_dir, probable_cve_dataset_filename,)
+    probable_cve_dataset = os.path.join(new_triage_results_dir, probable_cve_dataset_filename)
     if not s3_upload:
         if not os.path.exists(new_triage_results_dir):
             _logger.info(

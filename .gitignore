@@ -117,3 +117,5 @@ model_assets/
 
 # Kubernetes secrets
 */*-secret.yaml
+
+qa/log

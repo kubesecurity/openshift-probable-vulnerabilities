@@ -1,3 +1,4 @@
+"""Abstracts model file download from Object store."""
 from utils import aws_utils as aws
 from utils import cloud_constants as cc
 import daiquiri

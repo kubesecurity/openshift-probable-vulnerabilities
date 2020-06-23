@@ -1,3 +1,5 @@
+"""Invokes inference pipeline and uploads result to Object store."""
+
 import argparse
 import logging
 import sys
@@ -20,7 +22,7 @@ warnings.simplefilter(action="ignore", category=Warning)
 
 
 def main():
-    """The main program logic."""
+    """Entry point for inference pipeline."""
     parser = get_argument_parser()
     args = parser.parse_args()
 
@@ -57,7 +59,7 @@ def main():
 
 # noinspection PyTypeChecker
 def get_argument_parser():
-    """Defines all the command line arguments for the program."""
+    """Define all the command line arguments for the program."""
     description: str = textwrap.dedent(
         """
         This script can be used to run our AI models for probable vulnerability predictions.
@@ -142,21 +144,21 @@ def get_argument_parser():
         "-sd",
         "--start-date",
         default="",
-        help="If running for a custom interval, set this and the [end-date] in yyyy-mm-dd format.",
+        help="If running for a custom interval, set this and the end-date in yyyy-mm-dd format.",
     )
 
     parser.add_argument(
         "-ed",
         "--end-date",
         default="",
-        help="If running for a custom interval, set this and the [start-date] in yyyy-mm-dd format.",
+        help="If running for a custom interval, set this and the start-date in yyyy-mm-dd format.",
     )
 
     return parser
 
 
 def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
-    """Sets up the date range for data retireval."""
+    """Prepare date range for triage."""
     # ======= DATES SETUP FOR GETTING GITHUB BQ DATA ========
     _logger.info("----- DATES SETUP FOR GETTING GITHUB BQ DATA -----")
     if start_date_user != "" and end_date_user != "":
@@ -198,6 +200,7 @@ def setup_dates_for_triage(days_since_yday, start_date_user, end_date_user):
 
 
 def run_inference(df, CVE_MODEL_TYPE="bert") -> pd.DataFrame:
+    """Run inference pipeline."""
     if cc.S3_MODEL_REFRESH.lower() == "true":
         aws.s3_download_folder(aws.S3_OBJ.Bucket(cc.S3_BUCKET_NAME_MODEL), "model_assets", "/")
 

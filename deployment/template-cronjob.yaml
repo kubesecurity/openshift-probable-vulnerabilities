@@ -12,8 +12,8 @@ objects:
   metadata:
     name: bert-inference
   spec:
-    # Run everyday at midnight.
-    schedule: "0 0 */1 * *"
+    # Run every monday 1.am
+    schedule: "0 1 * * MON"
     startingDeadlineSeconds: 200
     successfulJobsHistoryLimit: 5
     failedJobsHistoryLimit: 5
@@ -30,16 +30,22 @@ objects:
             volumes:
             - name: credentials
               secret:
-                secretName: google-services-secret
+                secretName: google-big-query
                 items:
-                -  key: google-services.json
+                -  key: bq.json
                    path: gcloud/google-services.json
             containers:
             - env:
               - name: AWS_BUCKET_NAME_INFERENCE
-                value: ${AWS_BUCKET_NAME_INFERENCE}
+                valueFrom:
+                  secretKeyRef:
+                    key: bucket
+                    name: openshift-probable-vulnerability-inference-result-s3
               - name: AWS_BUCKET_NAME_MODEL
-                value: ${AWS_BUCKET_NAME_MODEL}
+                valueFrom:
+                  secretKeyRef:
+                    key: bucket
+                    name: openshift-probable-vulnerability-models-s3
               - name: DAYS
                 value: ${DAYS}
               - name: BIGQUERY_CREDENTIALS_FILEPATH
@@ -49,18 +55,19 @@ objects:
               - name: AWS_ACCESS_KEY_ID
                 valueFrom:
                   secretKeyRef:
-                    name: aws
                     key: aws_access_key_id
+                    name: openshift-probable-vulnerability-models-s3
               - name: AWS_SECRET_ACCESS_KEY
                 valueFrom:
                   secretKeyRef:
-                    name: aws
                     key: aws_secret_access_key
+                    name: openshift-probable-vulnerability-models-s3
               volumeMounts:
                 - name: credentials
                   mountPath: "/etc/credentials/"
                   readOnly: true
               image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+              imagePullPolicy: Always
               name: openshift-probable-vulnerabilities
               resources:
                 requests:
@@ -99,13 +106,13 @@ parameters:
   displayName: Docker registry
   required: true
   name: DOCKER_REGISTRY
-  value: "docker.io"
+  value: "quay.io"
 
 - description: Docker image to use
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "avgupta/bert-inference"
+  value: "openshiftio/openshift-probable-vulnerabilities"
 
 - description: Image tag
   displayName: Image tag
@@ -123,19 +130,19 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "14"
+  value: "7"
 
 - displayName: "Model bucket Name"
   description: Name of the bucket which contains the model
   required: true
   name: AWS_BUCKET_NAME_MODEL
-  value: "avgupta-dev-gokube-triage"
+  value: "stage-openshift-probable-vulnerability-models"
 
 - description: "Bucket to which the results of the inference will be uploaded"
   displayName: Inference bucket name
   required: true
   name: AWS_BUCKET_NAME_INFERENCE
-  value: "avgupta-dev-gokube-triage"
+  value: "openshift-probable-vulnerability-inference-result"
 
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
