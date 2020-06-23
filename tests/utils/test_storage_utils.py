@@ -10,12 +10,12 @@ from utils.storage_utils import write_output_csv
 
 
 def to_mock_csv(*args, **kwargs):
-    """A placeholder to mock the .to_csv() call of a dataframe."""
+    """Mock the .to_csv() call of a dataframe."""
     return args, kwargs
 
 
 def do_nothing(*args, **kwargs):
-    """A placeholder for a no action."""
+    """No action."""
     pass
 
 
@@ -26,6 +26,7 @@ class TestStorageUtils(TestCase):
     @mock.patch("pandas.DataFrame.to_csv")
     @mock.patch("os.makedirs")
     def test_write_output_csv(self, do_nothing, to_mock_csv):
+        """Test to check output csv."""
         df = pd.read_csv("tests/test_data/test_triage_results.csv")
 
         # Check if mocks are setup properly.

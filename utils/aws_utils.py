@@ -1,3 +1,4 @@
+"""Contains functions to deal with AWS S3."""
 from utils import cloud_constants as cc
 import boto3
 import botocore
@@ -21,7 +22,8 @@ S3_OBJ = session.resource('s3', config=botocore.client.Config(signature_version=
                           use_ssl=True)
 
 
-def s3_download_folder(s3_bucket_obj, bucket_dir_prefix='', download_path='./', ):
+def s3_download_folder(s3_bucket_obj, bucket_dir_prefix='', download_path='./'):
+    """Download the given s3 bucket object."""
     if not os.path.exists(download_path):
         os.makedirs(download_path)
 
@@ -40,6 +42,7 @@ def s3_download_folder(s3_bucket_obj, bucket_dir_prefix='', download_path='./', 
 
 
 def s3_upload_folder(folder_path, s3_bucket_obj, prefix=''):
+    """Upload the given folder into S3 bucket."""
     resolved_path = Path(folder_path).resolve()
     parent_dir = resolved_path.parent
     for root, _, filenames in os.walk(resolved_path):

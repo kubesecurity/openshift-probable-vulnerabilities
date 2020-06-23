@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-This file contains the constants for interaction with AWS/Minio.
-Note: Please don't add keys directly here, refer to environment variables
-"""
+"""Contains the constants for interaction with AWS/Minio."""
 
 import os
-import string
 
 # Please make sure you have your AWS envt variables setup
 AWS_S3_REGION = os.environ.get("AWS_S3_REGION", "ap-south-1")
@@ -49,7 +45,7 @@ BASE_BERT_UNCASED_PATH = os.environ.get(
 )
 P2BERT_CVE_MODEL_WEIGHTS_PATH = os.environ.get(
     "P2BERT_CVE_MODEL_WEIGHTS_PATH",
-    "/model_assets/gokube-phase2/saved_models/bert_cve75_weights-ep:02-trn_loss:0.172-trn_acc:0.957-val_loss:0.164-val_acc:0.978.h5",
+    "/model_assets/gokube-phase2/saved_models/bert_cve75_weights-ep:02-trn_loss:0.172-trn_acc:0.957-val_loss:0.164-val_acc:0.978.h5",  # noqa
 )
 
 P2_PYTORCH_CVE_BERT_CLASSIFIER_PATH = os.environ.get(
