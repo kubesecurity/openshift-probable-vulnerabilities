@@ -140,18 +140,6 @@ parameters:
   name: DAYS
   value: "7"
 
-- displayName: "Model bucket Name"
-  description: Name of the bucket which contains the model
-  required: true
-  name: AWS_BUCKET_NAME_MODEL
-  value: "stage-openshift-probable-vulnerability-models"
-
-- description: "Bucket to which the results of the inference will be uploaded"
-  displayName: Inference bucket name
-  required: true
-  name: AWS_BUCKET_NAME_INFERENCE
-  value: "openshift-probable-vulnerability-inference-result"
-
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
   required: true

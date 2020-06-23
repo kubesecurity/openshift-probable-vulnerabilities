@@ -16,7 +16,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     _logger.info("----- PREPARING PROBABLE SECURITY & CVE DATASETS  -----")
 
     new_triage_subdir = cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
-                                                        end_time=end_time.format("YYYYMMDD"))
+                                                    end_time=end_time.format("YYYYMMDD"))
     new_triage_results_dir = os.path.join(cc.BASE_TRIAGE_DIR, new_triage_subdir)
     file_prefix = get_file_prefix(cve_model_type)
 
@@ -70,6 +70,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
 
 
 def get_file_prefix(cve_model_type: str) -> str:
+    """Get prefix based on cve_model_type."""
     if cve_model_type == "gru":
         return "gru_model_inference"
     elif cve_model_type == "bert":

@@ -1,6 +1,6 @@
 """Test class that covers unit test for api utils."""
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import arrow
 import pandas as pd
@@ -21,11 +21,11 @@ class MockResponse:
         """Json method to return json which was set while creating Mock object."""
         return self.json_data
 
-    async def __aenter__(self, *args):
+    async def __aenter__(self, *args):  # noqa
         """Aenter method require for asyncio call."""
         return self
 
-    async def __aexit__(self, *args):
+    async def __aexit__(self, *args):  # noqa
         """Aexit method require for asyncio call."""
         return self
 
@@ -42,7 +42,7 @@ class APIUtilTestCase(TestCase):
     """Test the API util functions."""
 
     def setUp(self):
-        """Setup for the tests."""
+        """Do required Setup for unit tests."""
         self.start = arrow.now()
         self.end = arrow.now().shift(days=-7)
 
@@ -50,7 +50,6 @@ class APIUtilTestCase(TestCase):
     @patch("aiohttp.ClientSession.post", return_value=_get_mocked_success_response())
     def test_save_data_to_db(self, mocked_success_response, mock_data):
         """Test save_data_to_db method without any  error."""
-
         # assert mocked data/call
         assert pd.read_csv is mock_data
         assert ClientSession.post is mocked_success_response
@@ -65,7 +64,6 @@ class APIUtilTestCase(TestCase):
     @patch("aiohttp.ClientSession.post", return_value=_get_mocked_error_response())
     def test_save_data_to_db_with_error(self, mocked_error_response, mock_data):
         """Test save_data_to_db method with error."""
-
         # assert mocked data/call
         assert pd.read_csv is mock_data
         assert ClientSession.post is mocked_error_response
@@ -79,7 +77,6 @@ class APIUtilTestCase(TestCase):
     @patch("pandas.DataFrame.to_csv")
     def test_report_failures_no_data(self, save_data_to_csv_call):
         """Test save_data_to_db method without any  error."""
-
         df = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
         failed_records = []
 
@@ -91,7 +88,6 @@ class APIUtilTestCase(TestCase):
     @patch("pandas.DataFrame.to_csv")
     def test_report_failures_with_data(self, save_data_to_csv_call):
         """Test save_data_to_db method without any  error."""
-
         df = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
         failed_records = ['https://api.github.com/repos/google/cadvisor/issues/2584']
 
