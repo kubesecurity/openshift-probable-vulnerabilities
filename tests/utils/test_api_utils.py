@@ -6,7 +6,7 @@ import arrow
 import pandas as pd
 from aiohttp import ClientSession
 
-from utils.api_util import save_data_to_db, failed_to_insert
+from utils.api_util import save_data_to_db, report_failures
 
 
 class MockResponse:
@@ -41,42 +41,61 @@ def _get_mocked_success_response():
 class APIUtilTestCase(TestCase):
     """Test the API util functions."""
 
+    def setUp(self):
+        """Setup for the tests."""
+        self.start = arrow.now()
+        self.end = arrow.now().shift(days=-7)
+
     @patch("pandas.read_csv", return_value=pd.read_csv('tests/test_data/sample_probable_cve_data.csv'))
     @patch("aiohttp.ClientSession.post", return_value=_get_mocked_success_response())
-    @patch("pandas.DataFrame.to_csv", return_value=MagicMock())
-    def test_save_data_to_db(self, save_data_to_csv_call, mocked_success_response, mock_data):
+    def test_save_data_to_db(self, mocked_success_response, mock_data):
         """Test save_data_to_db method without any  error."""
-        start = arrow.now()
-        end = arrow.now().shift(days=-7)
 
         # assert mocked data/call
         assert pd.read_csv is mock_data
         assert ClientSession.post is mocked_success_response
 
-        save_data_to_db(start, end, "bert", True, "openshift")
+        df, failed_to_insert = save_data_to_db(self.start, self.end, "bert", True, "openshift")
 
         # assert failed record count
         assert 0 == len(failed_to_insert)
-
-        # check method should not be called as there is no failed record to save.
-        save_data_to_csv_call.assert_not_called()
+        assert 5 == len(df)
 
     @patch("pandas.read_csv", return_value=pd.read_csv('tests/test_data/sample_probable_cve_data.csv'))
     @patch("aiohttp.ClientSession.post", return_value=_get_mocked_error_response())
-    @patch("pandas.DataFrame.to_csv")
-    def test_save_data_to_db_with_error(self, save_data_to_csv_call, mocked_error_response, mock_data):
+    def test_save_data_to_db_with_error(self, mocked_error_response, mock_data):
         """Test save_data_to_db method with error."""
-        start = arrow.now()
-        end = arrow.now().shift(days=-7)
 
         # assert mocked data/call
         assert pd.read_csv is mock_data
         assert ClientSession.post is mocked_error_response
 
-        save_data_to_db(start, end, "bert", True, "openshift")
+        df, failed_to_insert = save_data_to_db(self.start, self.end, "bert", True, "openshift")
 
         # assert failed data count
         assert 5 == len(failed_to_insert)
+        assert 5 == len(df)
+
+    @patch("pandas.DataFrame.to_csv")
+    def test_report_failures_no_data(self, save_data_to_csv_call):
+        """Test save_data_to_db method without any  error."""
+
+        df = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
+        failed_records = []
+
+        report_failures(df, failed_records, self.start, self.end, True, "openshift")
+
+        # Check to_csv method should not be called as we dont have any failed records
+        save_data_to_csv_call.assert_not_called()
+
+    @patch("pandas.DataFrame.to_csv")
+    def test_report_failures_with_data(self, save_data_to_csv_call):
+        """Test save_data_to_db method without any  error."""
+
+        df = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
+        failed_records = ['https://api.github.com/repos/google/cadvisor/issues/2584']
+
+        report_failures(df, failed_records, self.start, self.end, True, "openshift")
 
         # Check to_csv method should be called to save failed record as csv file
         save_data_to_csv_call.assert_called()

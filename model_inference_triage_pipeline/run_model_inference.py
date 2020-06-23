@@ -12,7 +12,7 @@ from utils import aws_utils as aws
 from utils import cloud_constants as cc
 from utils.bq_utils import get_bq_data_for_inference
 from utils.storage_utils import write_output_csv
-from utils.api_util import save_data_to_db
+from utils.api_util import save_data_to_db, report_failures
 
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
@@ -57,7 +57,10 @@ def main():
 
     # Save data to database using api server
     if not cc.SKIP_INSERT_API_CALL:
-        save_data_to_db(start_time, end_time, CVE_MODEL_TYPE, S3_UPLOAD, ECOSYSTEM)
+        df, failed_to_insert = save_data_to_db(start_time, end_time, CVE_MODEL_TYPE, S3_UPLOAD, ECOSYSTEM)
+        # Save data to csv file those are failed to ingest
+        if len(failed_to_insert) > 0:
+            report_failures(df, failed_to_insert, start_time, end_time, S3_UPLOAD, ECOSYSTEM)
 
 
 # noinspection PyTypeChecker

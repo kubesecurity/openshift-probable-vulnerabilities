@@ -20,18 +20,21 @@ API_FULL_PATH = "{host}{api}".format(host=cc.OSA_API_SERVER_URL, api=INSERT_API_
 failed_to_insert = []
 
 
-def _report_failures(df: pd.DataFrame, triage_subdir: str, s3_upload: bool, ecosystem: str):
+def report_failures(df: pd.DataFrame, failed_records, start_time, end_time, s3_upload: bool, ecosystem: str):
     """Save failed record."""
-    if len(failed_to_insert) == 0:
-        log.info("Successfully ingested all records")
-    else:
-        failed_list_str = ",".join(failed_to_insert)
-        log.error("Failed to insert {count} data : {data}".format(count=len(failed_to_insert), data=failed_list_str))
+    if len(df) > 0:
+        if len(failed_records) == 0:
+            log.info("Successfully ingested all records")
+        else:
+            triage_subdir = _get_triage_subdir(start_time, end_time)
+            failed_list_str = ",".join(failed_records)
+            log.error("Failed to insert {count} data : {data}"
+                      .format(count=len(failed_records), data=failed_list_str))
 
-        failed_data = df[df['url'].isin(failed_to_insert)]
-        save_data_to_csv(failed_data, s3_upload, cc.FAILED_TO_INSERT, triage_subdir, ecosystem, cc.PROBABLE_CVES)
+            failed_data = df[df['url'].isin(failed_records)]
+            save_data_to_csv(failed_data, s3_upload, cc.FAILED_TO_INSERT, triage_subdir, ecosystem, cc.PROBABLE_CVES)
 
-        log.info("Failed data saved successfully.")
+            log.info("Failed data saved successfully.")
 
 
 async def _insert_df(df, url, session: ClientSession, sem):
@@ -78,10 +81,15 @@ def _update_df(df: pd.DataFrame) -> pd.DataFrame:
     return df.where(pd.notnull(df), None)
 
 
+def _get_triage_subdir(start_time, end_time):
+    return cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
+                                                end_time=end_time.format("YYYYMMDD"))
+
+
+
 async def _update_and_save(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
     """Save probable cve data to db via api server."""
-    triage_subdir = cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
-                                                end_time=end_time.format("YYYYMMDD"))
+    triage_subdir = _get_triage_subdir(start_time, end_time)
     df = _read_probable_cve_data(triage_subdir, cve_model_type, s3_upload, ecosystem)
     if len(df) != 0:
 
@@ -94,10 +102,11 @@ async def _update_and_save(start_time, end_time, cve_model_type: str, s3_upload:
         async with ClientSession() as session:
             await _insert_df(updated_df, API_FULL_PATH, session, sem)
 
-        # Save data to csv file those are failed to ingest
-        _report_failures(df, triage_subdir, s3_upload, ecosystem)
+        return updated_df
+
     else:
         log.info("No PCVE records to insert for {}".format(ecosystem))
+        return df
 
 
 def save_data_to_db(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
@@ -105,9 +114,10 @@ def save_data_to_db(start_time, end_time, cve_model_type: str, s3_upload: bool, 
     loop = asyncio.new_event_loop()
     # (todo) Use asyncio.run after moving to Python 3.7+
     try:
-        loop.run_until_complete(_update_and_save(start_time, end_time, cve_model_type, s3_upload, ecosystem))
+        df = loop.run_until_complete(_update_and_save(start_time, end_time, cve_model_type, s3_upload, ecosystem))
     finally:
         loop.close()
+    return df, failed_to_insert
 
 
 def _read_probable_cve_data(triage_subdir: str, cve_model_type: str, s3_upload: bool, ecosystem: str):
