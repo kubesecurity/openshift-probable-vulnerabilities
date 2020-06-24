@@ -40,6 +40,16 @@ objects:
                 name: openshift-probable-vulnerability-models-s3
           - name: DAYS
             value: ${DAYS}
+          - name: CVE_MODEL
+            value: ${CVE_MODEL}
+          - name: OSA_API_SERVER_HOST
+            value: ${OSA_API_SERVER_HOST}
+          - name: OSA_API_SERVER_PORT
+            value: ${OSA_API_SERVER_PORT}
+          - name: SKIP_INSERT_API_CALL
+            value: ${SKIP_INSERT_API_CALL}
+          - name: DATA_INSERT_CONCURRENCY
+            value: ${DATA_INSERT_CONCURRENCY}
           - name: BIGQUERY_CREDENTIALS_FILEPATH
             value: "/etc/credentials/gcloud/google-services.json"
           - name: CVE_MODEL
@@ -129,3 +139,27 @@ parameters:
   required: true
   name: CVE_MODEL
   value: "bert_torch"
+
+- description: "OSA API Server Host"
+  displayName: OSA API Server Host
+  required: true
+  name: OSA_API_SERVER_HOST
+  value: "osa-api-server"
+
+- description: "OSA API Server Port"
+  displayName: OSA API Server Port
+  required: true
+  name: OSA_API_SERVER_PORT
+  value: "5000"
+
+- description: "Flag that heps to skip API call which is doing insertion of inference output to db via api server"
+  displayName: Skip Insert API Call
+  required: true
+  name: SKIP_INSERT_API_CALL
+  value: "false"
+
+- description: "No of concurrent request allowed for data insertion"
+  displayName: Data Insert Concurrency
+  required: true
+  name: DATA_INSERT_CONCURRENCY
+  value: "5"

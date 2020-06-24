@@ -5,20 +5,22 @@
 #    pip-compile --output-file=requirements.txt requirements.in
 #
 absl-py==0.7.1            # via tensorboard, tensorflow
+aiohttp==3.6.2            # via -r requirements.in
 arrow==0.13.2             # via -r requirements.in
 astor==0.8.0              # via tensorflow
+async-timeout==3.0.1      # via aiohttp
+attrs==19.3.0             # via aiohttp
 beautifulsoup4==4.7.1     # via -r requirements.in
 bert-tensorflow==1.0.1    # via -r requirements.in
 boto3==1.9.157            # via -r requirements.in, transformers
 botocore==1.12.157        # via -r requirements.in, boto3, s3fs, s3transfer
 cachetools==3.1.1         # via google-auth
 certifi==2019.3.9         # via requests
-chardet==3.0.4            # via requests
+chardet==3.0.4            # via aiohttp, requests
 click==7.1.1              # via sacremoses
 contractions==0.0.18      # via -r requirements.in
 cycler==0.10.0            # via matplotlib
 daiquiri==1.5.0           # via -r requirements.in
-dataclasses==0.7          # via transformers
 dill==0.2.9               # via -r requirements.in
 docutils==0.14            # via botocore
 filelock==3.0.12          # via transformers
@@ -33,7 +35,7 @@ google-resumable-media==0.3.2  # via google-cloud-bigquery
 googleapis-common-protos==1.6.0  # via google-api-core
 grpcio==1.21.1            # via tensorboard, tensorflow
 h5py==2.9.0               # via keras, keras-applications
-idna==2.8                 # via requests
+idna==2.8                 # via requests, yarl
 jmespath==0.9.4           # via boto3, botocore
 joblib==0.14.1            # via sacremoses
 keras-applications==1.0.8  # via keras, tensorflow
@@ -43,6 +45,7 @@ kiwisolver==1.1.0         # via matplotlib
 lxml==4.3.3               # via -r requirements.in
 markdown==3.1.1           # via tensorboard
 matplotlib==3.1.1         # via -r requirements.in
+multidict==4.7.6          # via aiohttp, yarl
 numpy==1.16.4             # via -r requirements.in, h5py, keras, keras-applications, keras-preprocessing, matplotlib, opt-einsum, pandas, scipy, tensorboard, tensorflow, tensorflow-hub, torch, transformers
 opt-einsum==3.2.0         # via tensorflow
 pandas==0.24.2            # via -r requirements.in
@@ -76,6 +79,7 @@ urllib3==1.25.3           # via botocore, requests
 werkzeug==0.15.4          # via tensorboard
 wheel==0.33.4             # via tensorboard, tensorflow
 wrapt==1.11.2             # via tensorflow
+yarl==1.4.2               # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

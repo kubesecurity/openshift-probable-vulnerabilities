@@ -1,10 +1,12 @@
 """Test the write utilities for both localfilesystem and S3."""
+import os
 from unittest import TestCase
 from unittest import mock
-from utils.storage_utils import write_output_csv
-import pandas as pd
+
 import arrow
-import os
+import pandas as pd
+
+from utils.storage_utils import write_output_csv
 
 
 def to_mock_csv(*args, **kwargs):
@@ -17,6 +19,7 @@ def do_nothing(*args, **kwargs):
     pass
 
 
+@mock.patch("utils.cloud_constants.BASE_TRIAGE_DIR", 'test')
 class TestStorageUtils(TestCase):
     """Test the storage utils functions."""
 
@@ -25,7 +28,6 @@ class TestStorageUtils(TestCase):
     def test_write_output_csv(self, do_nothing, to_mock_csv):
         """Test to check output csv."""
         df = pd.read_csv("tests/test_data/test_triage_results.csv")
-        os.environ["BASE_TRIAGE_DIR"] = "test"
 
         # Check if mocks are setup properly.
         assert pd.DataFrame.to_csv is to_mock_csv
