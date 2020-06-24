@@ -135,7 +135,7 @@ parameters:
   description: Name of the bucket which contains the model
   required: true
   name: AWS_BUCKET_NAME_MODEL
-  value: "stage-openshift-probable-vulnerability-models"
+  value: "openshift-probable-vulnerability-models"
 
 - description: "Bucket to which the results of the inference will be uploaded"
   displayName: Inference bucket name
