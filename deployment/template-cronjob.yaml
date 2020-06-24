@@ -142,4 +142,4 @@ parameters:
   required: true
   name: CRON_SCHEDULE
   # Run every monday 1.am
-  value: "30 * * * *"
+  value: "15 * * * *"
