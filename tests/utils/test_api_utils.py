@@ -6,7 +6,7 @@ import arrow
 import pandas as pd
 from aiohttp import ClientSession
 
-from utils.api_util import save_data_to_db, report_failures
+from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
 
 
 class MockResponse:
@@ -46,33 +46,31 @@ class APIUtilTestCase(TestCase):
         self.start = arrow.now()
         self.end = arrow.now().shift(days=-7)
 
-    @patch("pandas.read_csv", return_value=pd.read_csv('tests/test_data/sample_probable_cve_data.csv'))
     @patch("aiohttp.ClientSession.post", return_value=_get_mocked_success_response())
-    def test_save_data_to_db(self, mocked_success_response, mock_data):
+    def test_save_data_to_db(self, mocked_success_response):
         """Test save_data_to_db method without any  error."""
-        # assert mocked data/call
-        assert pd.read_csv is mock_data
+        # assert post call
         assert ClientSession.post is mocked_success_response
 
-        df, failed_to_insert = save_data_to_db(self.start, self.end, "bert", True, "openshift")
+        probable_cve_data = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
+        updated_df, failed_to_insert = save_data_to_db(probable_cve_data, "openshift")
 
         # assert failed record count
         assert 0 == len(failed_to_insert)
-        assert 5 == len(df)
+        assert 5 == len(updated_df)
 
-    @patch("pandas.read_csv", return_value=pd.read_csv('tests/test_data/sample_probable_cve_data.csv'))
     @patch("aiohttp.ClientSession.post", return_value=_get_mocked_error_response())
-    def test_save_data_to_db_with_error(self, mocked_error_response, mock_data):
+    def test_save_data_to_db_with_error(self, mocked_error_response):
         """Test save_data_to_db method with error."""
-        # assert mocked data/call
-        assert pd.read_csv is mock_data
+        # assert post call
         assert ClientSession.post is mocked_error_response
 
-        df, failed_to_insert = save_data_to_db(self.start, self.end, "bert", True, "openshift")
+        probable_cve_data = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
+        updated_df, failed_to_insert = save_data_to_db(probable_cve_data, "openshift")
 
         # assert failed data count
         assert 5 == len(failed_to_insert)
-        assert 5 == len(df)
+        assert 5 == len(updated_df)
 
     @patch("pandas.DataFrame.to_csv")
     def test_report_failures_no_data(self, save_data_to_csv_call):
@@ -95,3 +93,14 @@ class APIUtilTestCase(TestCase):
 
         # Check to_csv method should be called to save failed record as csv file
         save_data_to_csv_call.assert_called()
+
+    @patch("pandas.read_csv", return_value=pd.read_csv('tests/test_data/sample_probable_cve_data.csv'))
+    def test_read_probable_cve_data(self, mock_data):
+        """Test read_probable_cve_data method."""
+        # assert mocked data/call
+        assert pd.read_csv is mock_data
+
+        df = read_probable_cve_data(self.start, self.end, "bert", True, "openshift")
+
+        # assert data count
+        assert 5 == len(df)

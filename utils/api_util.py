@@ -86,11 +86,8 @@ def _get_triage_subdir(start_time, end_time):
                                                 end_time=end_time.format("YYYYMMDD"))
 
 
-
-async def _update_and_save(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
+async def _update_and_save(df: pd.DataFrame, ecosystem: str):
     """Save probable cve data to db via api server."""
-    triage_subdir = _get_triage_subdir(start_time, end_time)
-    df = _read_probable_cve_data(triage_subdir, cve_model_type, s3_upload, ecosystem)
     if len(df) != 0:
 
         log.info("PCVE data count :{count}".format(count=str(df.shape[0])))
@@ -109,19 +106,20 @@ async def _update_and_save(start_time, end_time, cve_model_type: str, s3_upload:
         return df
 
 
-def save_data_to_db(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
+def save_data_to_db(df: pd.DataFrame, ecosystem: str):
     """Main method call to save probable cve data to db via api server."""
     loop = asyncio.new_event_loop()
     # (todo) Use asyncio.run after moving to Python 3.7+
     try:
-        df = loop.run_until_complete(_update_and_save(start_time, end_time, cve_model_type, s3_upload, ecosystem))
+        df = loop.run_until_complete(_update_and_save(df, ecosystem))
     finally:
         loop.close()
     return df, failed_to_insert
 
 
-def _read_probable_cve_data(triage_subdir: str, cve_model_type: str, s3_upload: bool, ecosystem: str):
+def read_probable_cve_data(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
     """Read Probable CVE data from the file."""
+    triage_subdir = _get_triage_subdir(start_time, end_time)
     triage_results_dir = os.path.join(cc.BASE_TRIAGE_DIR, triage_subdir)
     file_prefix = get_file_prefix(cve_model_type)
     filename = cc.OUTPUT_FILE_NAME.format(data_type=cc.PROBABLE_CVES, file_prefix=file_prefix,
