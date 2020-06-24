@@ -51,6 +51,14 @@ objects:
                 value: "/etc/credentials/gcloud/google-services.json"
               - name: CVE_MODEL
                 value: ${CVE_MODEL}
+              - name: OSA_API_SERVER_HOST
+                value: ${OSA_API_SERVER_HOST}
+              - name: OSA_API_SERVER_PORT
+                value: ${OSA_API_SERVER_PORT}
+              - name: SKIP_INSERT_API_CALL
+                value: ${SKIP_INSERT_API_CALL}
+              - name: DATA_INSERT_CONCURRENCY
+                value: ${DATA_INSERT_CONCURRENCY}
               - name: AWS_ACCESS_KEY_ID
                 valueFrom:
                   secretKeyRef:
