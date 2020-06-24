@@ -132,7 +132,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "7"
+  value: "14"
 
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
@@ -162,4 +162,4 @@ parameters:
   displayName: Data Insert Concurrency
   required: true
   name: DATA_INSERT_CONCURRENCY
-  value: "10"
+  value: "5"
