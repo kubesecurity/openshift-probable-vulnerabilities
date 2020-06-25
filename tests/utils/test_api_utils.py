@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import arrow
 import pandas as pd
+import s3fs
 from aiohttp import ClientSession
 
 from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
@@ -97,7 +98,7 @@ class APIUtilTestCase(TestCase):
     @patch("s3fs.S3FileSystem.open", return_value=open('tests/test_data/sample_probable_cve_data.csv'))
     def test_read_probable_cve_data(self, mock_data):
         """Test read_probable_cve_data method."""
-
+        assert s3fs.S3FileSystem.open is mock_data
         df = read_probable_cve_data(self.start, self.end, "bert", True, "openshift")
 
         # assert data count
