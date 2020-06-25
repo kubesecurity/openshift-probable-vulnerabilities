@@ -92,5 +92,6 @@ def save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, d
     else:
         s3_path = cc.S3_FILE_PATH.format(bucket_name=cc.S3_BUCKET_NAME_INFERENCE, triage_dir=new_triage_subdir,
                                          dataset_filename=filename)
-        df.to_csv(s3_path, index=False)
+        with cc.INFERENCE_S3FS.open(s3_path, 'rb') as f:
+            df.to_csv(f, index=False)
         _logger.info("Saving {} dataset to {}".format(data_type, s3_path))

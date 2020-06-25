@@ -64,6 +64,16 @@ objects:
               secretKeyRef:
                 key: aws_secret_access_key
                 name: openshift-probable-vulnerability-models-s3
+          - name: AWS_INFERENCE_S3_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws_access_key_id
+                name: openshift-probable-vulnerability-inference-result-s3
+          - name: AWS_INFERENCE_S3_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws_secret_access_key
+                name: openshift-probable-vulnerability-inference-result-s3
           volumeMounts:
             - name: credentials
               mountPath: "/etc/credentials/"
