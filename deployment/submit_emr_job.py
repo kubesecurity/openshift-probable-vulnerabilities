@@ -31,8 +31,8 @@ _logger = daiquiri.getLogger(__name__)
 # Do not pick these from constants file, this script is a job scheduler and should be able to run
 # independent of source of module.
 COMPONENT_PREFIX = os.environ.get("COMPONENT_PREFIX", "go-cve")
-AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_S3_ACCESS_KEY_ID", "")
-AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_S3_SECRET_ACCESS_KEY", "")
+S3_MODEL_ACCESS_KEY_ID = os.environ.get("S3_MODEL_ACCESS_KEY_ID", "")
+S3_MODEL_SECRET_ACCESS_KEY = os.environ.get("S3_MODEL_SECRET_ACCESS_KEY", "")
 
 
 def submit_job(steps, s3_source_uri, s3_bootstrap_uri, source_bucket, s3_log_bucket):
@@ -47,8 +47,8 @@ def submit_job(steps, s3_source_uri, s3_bootstrap_uri, source_bucket, s3_log_buc
     _logger.debug("Starting spark emr cluster and submitting the jobs ...")
     emr_client = boto3.client(
         "emr",
-        aws_access_key_id=AWS_S3_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_S3_SECRET_ACCESS_KEY,
+        aws_access_key_id=S3_MODEL_ACCESS_KEY_ID,
+        aws_secret_access_key=S3_MODEL_SECRET_ACCESS_KEY,
         region_name="us-east-1",
     )
 
@@ -77,8 +77,8 @@ def submit_job(steps, s3_source_uri, s3_bootstrap_uri, source_bucket, s3_log_buc
                                         "PYTHONPATH": "/home/hadoop/",
                                         "LC_ALL": "en_US.UTF-8",
                                         "LANG": "en_US.UTF-8",
-                                        "AWS_S3_ACCESS_KEY_ID": AWS_S3_ACCESS_KEY_ID,
-                                        "AWS_S3_SECRET_ACCESS_KEY": AWS_S3_SECRET_ACCESS_KEY,
+                                        "S3_MODEL_ACCESS_KEY_ID": S3_MODEL_ACCESS_KEY_ID,
+                                        "S3_MODEL_SECRET_ACCESS_KEY": S3_MODEL_SECRET_ACCESS_KEY,
                                         "AWS_S3_BUCKET_NAME": source_bucket,
                                     },
                                 }

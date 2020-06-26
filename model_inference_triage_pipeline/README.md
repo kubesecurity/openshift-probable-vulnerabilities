@@ -137,10 +137,10 @@ optional arguments:
 
 But before we run this, we need to make sure our authentication credentials are all setup in the [__`cloud_constants.py`__](https://github.com/fabric8-analytics/openshift-probable-vulnerabilities/blob/master/model_inference_triage_pipeline/utils/cloud_constants.py) file, part of which is depicted below.
 ```bash
-# Please make sure you have your AWS envt variables setup                             
-AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'us-east-1')                         
-AWS_S3_ACCESS_KEY_ID = os.environ.get('AWS_S3_ACCESS_KEY_ID', '')                     
-AWS_S3_SECRET_ACCESS_KEY = os.environ.get('AWS_S3_SECRET_ACCESS_KEY', '')  
+# Please make sure you have your AWS envt variables setup
+AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'us-east-1')
+S3_MODEL_ACCESS_KEY_ID = os.environ.get('S3_MODEL_ACCESS_KEY_ID', '')
+S3_MODEL_SECRET_ACCESS_KEY = os.environ.get('S3_MODEL_SECRET_ACCESS_KEY', '')
 ...
 ... 
 # Please set the following to point to your BQ auth credentials JSON                 

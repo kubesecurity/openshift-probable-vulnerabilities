@@ -26,14 +26,16 @@ objects:
             items:
             -  key: bq.json
                path: gcloud/google-services.json
+        - name: model-assets
+          emptyDir: {}
         containers:
         - env:
-          - name: AWS_BUCKET_NAME_INFERENCE
+          - name: S3_INFERENCE_BUCKET
             valueFrom:
               secretKeyRef:
                 key: bucket
                 name: openshift-probable-vulnerability-inference-result-s3
-          - name: AWS_BUCKET_NAME_MODEL
+          - name: S3_MODEL_BUCKET
             valueFrom:
               secretKeyRef:
                 key: bucket
@@ -54,22 +56,22 @@ objects:
             value: "/etc/credentials/gcloud/google-services.json"
           - name: CVE_MODEL
             value: ${CVE_MODEL}
-          - name: AWS_ACCESS_KEY_ID
+          - name: S3_MODEL_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
                 key: aws_access_key_id
                 name: openshift-probable-vulnerability-models-s3
-          - name: AWS_SECRET_ACCESS_KEY
+          - name: S3_MODEL_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
                 key: aws_secret_access_key
                 name: openshift-probable-vulnerability-models-s3
-          - name: AWS_INFERENCE_S3_ACCESS_KEY_ID
+          - name: S3_INFERENCE_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
                 key: aws_access_key_id
                 name: openshift-probable-vulnerability-inference-result-s3
-          - name: AWS_INFERENCE_S3_SECRET_ACCESS_KEY
+          - name: S3_INFERENCE_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
                 key: aws_secret_access_key
@@ -78,6 +80,8 @@ objects:
             - name: credentials
               mountPath: "/etc/credentials/"
               readOnly: true
+            - name: model-assets
+              mountPath: "/model_assets"
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           imagePullPolicy: Always
           name: openshift-probable-vulnerabilities

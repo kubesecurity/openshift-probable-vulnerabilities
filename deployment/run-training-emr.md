@@ -6,7 +6,7 @@ to add any packages that you need installed for your changes work
 we run 1.15.x everywhere but not in this bootstrap as it's one of the EMR applications installed in the payload.
 * Make sure all your data is present in S3.
 * Zip up the source code and upload that zip to S3 as well.
-* Make sure to import your aws keys under the environment variables `AWS_S3_ACCESS_KEY_ID` and `AWS_S3_SECRET_ACCESS_KEY`.
+* Make sure to import your aws keys under the environment variables `S3_MODEL_ACCESS_KEY_ID` and `S3_MODEL_SECRET_ACCESS_KEY`.
 Then run the job submission script with `python submit_emr_job_train.py`, with changes to the data locations:
 
 ```python

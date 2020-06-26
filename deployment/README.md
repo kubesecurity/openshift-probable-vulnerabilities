@@ -121,8 +121,8 @@ the job at 12 A.M. (00:00) daily.
 
 ### Configurable variables in template
 
-- AWS_BUCKET_NAME_MODEL - This is the bucket from which the models will be read.
-- AWS_BUCKET_NAME_INFERENCE - This is the bucket to which the inference results will be written
+- S3_MODEL_BUCKET - This is the bucket from which the models will be read.
+- S3_INFERENCE_BUCKET - This is the bucket to which the inference results will be written
 - DAYS - The number of days for which the job has to be run
 
 ## Deployment on a cluster with only CPU nodes
