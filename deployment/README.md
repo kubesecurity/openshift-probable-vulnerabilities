@@ -133,7 +133,7 @@ the job at 12 A.M. (00:00) daily.
 
 ### Configurable variables in template
 
-- DAYS - The number of days for which the job has to be run
+- DAYS - The number of days for which the job has to be run,
 
 ## Deployment on a cluster with only CPU nodes
 
