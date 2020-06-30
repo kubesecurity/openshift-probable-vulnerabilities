@@ -151,7 +151,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "1"
+  value: "7"
 
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
@@ -188,4 +188,4 @@ parameters:
   required: true
   name: CRON_SCHEDULE
   # Run every monday 1.am
-  value: "15 * * * *"
+  value: "0 1 * * MON"
