@@ -33,18 +33,10 @@ objects:
                 items:
                 -  key: bq.json
                    path: gcloud/google-services.json
+            - name: model-assets
+              emptyDir: {}
             containers:
             - env:
-              - name: AWS_BUCKET_NAME_INFERENCE
-                valueFrom:
-                  secretKeyRef:
-                    key: bucket
-                    name: openshift-probable-vulnerability-inference-result-s3
-              - name: AWS_BUCKET_NAME_MODEL
-                valueFrom:
-                  secretKeyRef:
-                    key: bucket
-                    name: openshift-probable-vulnerability-models-s3
               - name: DAYS
                 value: ${DAYS}
               - name: BIGQUERY_CREDENTIALS_FILEPATH
@@ -59,20 +51,42 @@ objects:
                 value: ${SKIP_INSERT_API_CALL}
               - name: DATA_INSERT_CONCURRENCY
                 value: ${DATA_INSERT_CONCURRENCY}
-              - name: AWS_ACCESS_KEY_ID
+              - name: S3_MODEL_BUCKET
+                valueFrom:
+                  secretKeyRef:
+                    key: bucket
+                    name: openshift-probable-vulnerability-models-s3
+              - name: S3_MODEL_ACCESS_KEY_ID
                 valueFrom:
                   secretKeyRef:
                     key: aws_access_key_id
                     name: openshift-probable-vulnerability-models-s3
-              - name: AWS_SECRET_ACCESS_KEY
+              - name: S3_MODEL_SECRET_ACCESS_KEY
                 valueFrom:
                   secretKeyRef:
                     key: aws_secret_access_key
                     name: openshift-probable-vulnerability-models-s3
+              - name: S3_INFERENCE_BUCKET
+                valueFrom:
+                  secretKeyRef:
+                    key: bucket
+                    name: openshift-probable-vulnerability-inference-result-s3
+              - name: S3_INFERENCE_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    key: aws_access_key_id
+                    name: openshift-probable-vulnerability-inference-result-s3
+              - name: S3_INFERENCE_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: aws_secret_access_key
+                    name: openshift-probable-vulnerability-inference-result-s3
               volumeMounts:
                 - name: credentials
                   mountPath: "/etc/credentials/"
                   readOnly: true
+                - name: model-assets
+                  mountPath: "/model_assets"
               image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
               imagePullPolicy: Always
               name: openshift-probable-vulnerabilities

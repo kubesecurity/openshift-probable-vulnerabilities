@@ -24,14 +24,26 @@ Using any of the templates in this folder requires two secrets that need to be p
 of the two contains the aws keys where the data will be pushed and models will be read from. Here is the
 definition of the secret:
 ```yaml
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: aws
+  name: openshift-probable-vulnerability-models-s3
 type: Opaque
 data:
   aws_access_key_id: <Your base 64 encoded access key here>
   aws_secret_access_key: <Your base 64 encoded secret key here>
+  bucket: <Your base 64 encoded bucket name here>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openshift-probable-vulnerability-inference-result-s3
+type: Opaque
+data:
+  aws_access_key_id: <Your base 64 encoded access key here>
+  aws_secret_access_key: <Your base 64 encoded secret key here>
+  bucket: <Your base 64 encoded bucket name here>
 ```
 To base64 encode a piece of text, use the command:
 ```bash
@@ -53,10 +65,10 @@ a new secret definition, say `google-secret.yaml`.
 apiVersion: v1
 kind: Secret
 metadata:
-  name: google-services-secret
+  name: google-big-query
 type: Opaque
 data:
-  google-services.json: |-
+  bq.json: |-
     <Full multi-line secret content goes here.>
 ```
 If everything went according to plan till this step, you now have the following two secrets on the cluster:
@@ -121,9 +133,7 @@ the job at 12 A.M. (00:00) daily.
 
 ### Configurable variables in template
 
-- AWS_BUCKET_NAME_MODEL - This is the bucket from which the models will be read.
-- AWS_BUCKET_NAME_INFERENCE - This is the bucket to which the inference results will be written
-- DAYS - The number of days for which the job has to be run
+- DAYS - The number of days for which the job has to be run,
 
 ## Deployment on a cluster with only CPU nodes
 

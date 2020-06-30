@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import arrow
 import pandas as pd
+import s3fs
 from aiohttp import ClientSession
 
 from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
@@ -83,7 +84,7 @@ class APIUtilTestCase(TestCase):
         # Check to_csv method should not be called as we dont have any failed records
         save_data_to_csv_call.assert_not_called()
 
-    @patch("pandas.DataFrame.to_csv")
+    @patch("s3fs.S3FileSystem.open")
     def test_report_failures_with_data(self, save_data_to_csv_call):
         """Test save_data_to_db method without any  error."""
         df = pd.read_csv('tests/test_data/sample_probable_cve_data.csv')
@@ -94,12 +95,10 @@ class APIUtilTestCase(TestCase):
         # Check to_csv method should be called to save failed record as csv file
         save_data_to_csv_call.assert_called()
 
-    @patch("pandas.read_csv", return_value=pd.read_csv('tests/test_data/sample_probable_cve_data.csv'))
+    @patch("s3fs.S3FileSystem.open", return_value=open('tests/test_data/sample_probable_cve_data.csv'))
     def test_read_probable_cve_data(self, mock_data):
         """Test read_probable_cve_data method."""
-        # assert mocked data/call
-        assert pd.read_csv is mock_data
-
+        assert s3fs.S3FileSystem.open is mock_data
         df = read_probable_cve_data(self.start, self.end, "bert", True, "openshift")
 
         # assert data count

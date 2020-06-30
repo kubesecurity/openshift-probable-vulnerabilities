@@ -26,8 +26,8 @@ if __name__ == '__main__':
 
     jac = JIRA(server='http://www.bouncycastle.org/jira')
 
-    bucket_resource = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_S3_ACCESS_KEY_ID'),
-                                   aws_secret_access_key=os.environ.get('AWS_S3_SECRET_ACCESS_KEY'),
+    bucket_resource = boto3.client('s3', aws_access_key_id=os.environ.get('S3_MODEL_ACCESS_KEY_ID'),
+                                   aws_secret_access_key=os.environ.get('S3_MODEL_SECRET_ACCESS_KEY'),
                                    region_name='us-east-1')
 
     with open('project_names.txt', 'r') as f:

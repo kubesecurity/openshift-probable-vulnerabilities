@@ -2,13 +2,16 @@
 """Contains the constants for interaction with AWS/Minio."""
 
 import os
+from s3fs import S3FileSystem
 
 # Please make sure you have your AWS envt variables setup
 AWS_S3_REGION = os.environ.get("AWS_S3_REGION", "ap-south-1")
-AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
-AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-S3_BUCKET_NAME_MODEL = os.environ.get("AWS_BUCKET_NAME_MODEL", "avgupta-dev-gokube-triage")
-S3_BUCKET_NAME_INFERENCE = os.environ.get("AWS_BUCKET_NAME_INFERENCE", "avgupta-dev-gokube-triage")
+S3_MODEL_ACCESS_KEY_ID = os.environ.get("S3_MODEL_ACCESS_KEY_ID", "")
+S3_MODEL_SECRET_ACCESS_KEY = os.environ.get("S3_MODEL_SECRET_ACCESS_KEY", "")
+S3_INFERENCE_ACCESS_KEY_ID = os.environ.get("S3_INFERENCE_ACCESS_KEY_ID", "")
+S3_INFERENCE_SECRET_ACCESS_KEY = os.environ.get("S3_INFERENCE_SECRET_ACCESS_KEY", "")
+S3_BUCKET_NAME_MODEL = os.environ.get("S3_MODEL_BUCKET", "avgupta-dev-gokube-triage")
+S3_BUCKET_NAME_INFERENCE = os.environ.get("S3_INFERENCE_BUCKET", "avgupta-dev-gokube-triage")
 
 # Please set the following to point to your BQ auth credentials JSON
 BIGQUERY_CREDENTIALS_FILEPATH = os.environ.get(
@@ -83,3 +86,5 @@ OSA_API_SERVER_HOST = os.environ.get("OSA_API_SERVER_HOST", "osa-api-server")
 OSA_API_SERVER_PORT = os.environ.get("OSA_API_SERVER_PORT", 5000)
 OSA_API_SERVER_URL = 'http://{host}:{port}'.format(host=OSA_API_SERVER_HOST, port=OSA_API_SERVER_PORT)
 DATA_INSERT_CONCURRENCY = int(os.environ.get("DATA_INSERT_CONCURRENCY", 10))
+# Shared instance of S3FileSystem
+INFERENCE_S3FS = S3FileSystem(key=S3_INFERENCE_ACCESS_KEY_ID, secret=S3_INFERENCE_SECRET_ACCESS_KEY)

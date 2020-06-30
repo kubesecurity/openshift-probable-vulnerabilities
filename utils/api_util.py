@@ -126,12 +126,14 @@ def read_probable_cve_data(start_time, end_time, cve_model_type: str, s3_upload:
                                           triage_dir=triage_subdir, ecosystem=ecosystem)
     dataset = os.path.join(triage_results_dir, filename)
 
+    df = None
     if not s3_upload:
         log.info("Reading {} dataset from local folder: {}".format(cc.PROBABLE_CVES, dataset))
         df = pd.read_csv(dataset, index_col=None, header=0)
     else:
         s3_path = cc.S3_FILE_PATH.format(bucket_name=cc.S3_BUCKET_NAME_INFERENCE, triage_dir=triage_subdir,
                                          dataset_filename=filename)
-        log.info("Reading {} dataset from ".format(cc.PROBABLE_CVES, s3_path))
-        df = pd.read_csv(s3_path, index_col=None, header=0)
+        log.info("Reading {} dataset from {}".format(cc.PROBABLE_CVES, s3_path))
+        with cc.INFERENCE_S3FS.open(s3_path) as f:
+            df = pd.read_csv(f, index_col=None, header=0)
     return df

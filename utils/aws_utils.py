@@ -10,8 +10,8 @@ import logging
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
 
-_aws_key_id = cc.AWS_S3_ACCESS_KEY_ID
-_aws_secret_key = cc.AWS_S3_SECRET_ACCESS_KEY
+_aws_key_id = cc.S3_MODEL_ACCESS_KEY_ID
+_aws_secret_key = cc.S3_MODEL_SECRET_ACCESS_KEY
 _aws_region = cc.AWS_S3_REGION
 
 session = boto3.session.Session(aws_access_key_id=_aws_key_id,
