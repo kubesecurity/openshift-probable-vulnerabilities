@@ -187,5 +187,4 @@ parameters:
   displayName: CronJob scheduler value
   required: true
   name: CRON_SCHEDULE
-  # Run every monday 1.am
-  value: "0 1 * * MON"
+  value: "15 * * * *"
