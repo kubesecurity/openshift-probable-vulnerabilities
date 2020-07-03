@@ -10,6 +10,7 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN source /opt/rh/rh-python36/enable && python -m virtualenv --python=$(which python) $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV PYTHONPATH="$PYTHONPATH:/"
+ENV PYTHONIOENCODING=utf-8
 
 # Helps speedup docker build time.
 ADD model_inference_triage_pipeline/requirements.txt /requirements.txt
