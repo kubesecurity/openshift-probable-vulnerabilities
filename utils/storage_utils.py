@@ -37,8 +37,8 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_feedback_comments"] = ""
 
     df.loc[:, "ecosystem"] = ecosystem
-    df.loc[:, "title"] = df.apply(lambda x: _handle_unicode_str_data(x['title'], x['api_url']), axis=1)
-    df.loc[:, "body"] = df.apply(lambda x: _handle_unicode_str_data(x['body'], x['api_url']), axis=1)
+    # df.loc[:, "title"] = df.apply(lambda x: _handle_unicode_str_data(x['title'], x['api_url']), axis=1)
+    # df.loc[:, "body"] = df.apply(lambda x: _handle_unicode_str_data(x['body'], x['api_url']), axis=1)
     columns = [
         "repo_name",
         "event_type",
@@ -106,10 +106,10 @@ def save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, d
     if not s3_upload:
         dataset = os.path.join(new_triage_results_dir, filename)
         _logger.info("Saving {} dataset locally:{}".format(data_type, dataset))
-        df.to_csv(dataset, index=False, encoding='utf-8')
+        df.to_csv(dataset, index=False)
     else:
         s3_path = cc.S3_FILE_PATH.format(bucket_name=cc.S3_BUCKET_NAME_INFERENCE, triage_dir=new_triage_subdir,
                                          dataset_filename=filename)
         with cc.INFERENCE_S3FS.open(s3_path, 'w') as f:
-            df.to_csv(f, index=False, encoding='utf-8')
+            df.to_csv(f, index=False)
         _logger.info("Saving {} dataset to {}".format(data_type, s3_path))
