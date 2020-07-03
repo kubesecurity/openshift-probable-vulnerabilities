@@ -1,23 +1,24 @@
 # Based on the RHEL-7 UBI
-FROM docker.io/nvidia/cuda:10.0-cudnn7-devel-ubi7
+FROM docker.io/nvidia/cuda:10.1-cudnn7-devel-ubi8
+
 LABEL MAINTAINER="Avishkar Gupta <avgupta@redhat.com>"
-#
-#RUN yum install -y git rh-python36 \
-#    && source /opt/rh/rh-python36/enable \
-#    && python -m pip install --upgrade pip virtualenv setuptools
 
-RUN microdnf install git && microdnf install python3 && pip3 install --upgrade pip &&\
+RUN yum install -y git rh-python36 \
+    && source /opt/rh/rh-python36/enable \
+    && python -m pip install --upgrade pip virtualenv setuptools
+
+#RUN microdnf install git && microdnf install python3 && pip3 install --upgrade pip &&\
 
 
-#ENV VIRTUAL_ENV=/opt/venv
-#RUN source /opt/rh/rh-python36/enable && python -m virtualenv --python=$(which python) $VIRTUAL_ENV
-#ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-#ENV PYTHONPATH="$PYTHONPATH:/"
+ENV VIRTUAL_ENV=/opt/venv
+RUN source /opt/rh/rh-python36/enable && python -m virtualenv --python=$(which python) $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV PYTHONPATH="$PYTHONPATH:/"
 
 # Helps speedup docker build time.
 ADD model_inference_triage_pipeline/requirements.txt /requirements.txt
-#RUN pip install -r /requirements.txt
-RUN pip3 install -r /requirements.txt && rm /requirements.txt
+RUN pip install -r /requirements.txt
+#RUN pip3 install -r /requirements.txt && rm /requirements.txt
 
 ADD model_inference_triage_pipeline /model_inference_triage_pipeline
 ADD models /models
