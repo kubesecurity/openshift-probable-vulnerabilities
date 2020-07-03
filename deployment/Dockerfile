@@ -11,7 +11,6 @@ RUN source /opt/rh/rh-python36/enable && python -m virtualenv --python=$(which p
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV PYTHONPATH="$PYTHONPATH:/"
 ENV PYTHONIOENCODING=UTF-8
-RUN locale-gen en_US.UTF-8
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # Helps speedup docker build time.
