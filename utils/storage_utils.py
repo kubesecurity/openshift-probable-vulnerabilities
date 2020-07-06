@@ -73,18 +73,6 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     return df
 
 
-def _handle_unicode_str_data(data, url) -> str:
-    """Handle unicode changaracter by encoding/decoding string with ascii."""
-    #
-    # _logger.info(" api_url : {}".format(url))
-    # _logger.info(" data before update : {}".format(data))
-    updated_data = data.encode('ascii', 'ignore').decode('ascii')
-    # _logger.info(" data after update : {}".format(updated_data))
-
-    return updated_data if data is not None else None
-    # return data.encode('ascii', 'ignore').decode('ascii') if data is not None else None
-
-
 def get_file_prefix(cve_model_type: str) -> str:
     """Get prefix based on cve_model_type."""
     if cve_model_type == "gru":

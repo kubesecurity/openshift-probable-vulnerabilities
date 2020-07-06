@@ -9,12 +9,11 @@ import warnings
 import arrow
 import daiquiri
 import pandas as pd
-import locale
 
 from utils import aws_utils as aws
 from utils import cloud_constants as cc
 from utils.bq_utils import get_bq_data_for_inference
-from utils.storage_utils import write_output_csv, save_data_to_csv
+from utils.storage_utils import write_output_csv
 from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
 
 daiquiri.setup(level=logging.INFO)
@@ -46,13 +45,6 @@ def main():
     day_count, start_time, end_time, date_range = setup_dates_for_triage(
         args.days_since_yday, args.start_date, args.end_date
     )
-
-    _logger.info("Encoding: {}".format(sys.stdout.encoding))
-
-    loc = locale.getlocale()
-    import pprint
-    pprint.pprint(loc)
-    pprint.pprint('--------')
 
     df = get_bq_data_for_inference(ECOSYSTEM, day_count, date_range)
     df = run_inference(df, CVE_MODEL_TYPE)
