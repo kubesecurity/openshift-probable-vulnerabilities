@@ -37,8 +37,6 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_feedback_comments"] = ""
 
     df.loc[:, "ecosystem"] = ecosystem
-    # df.loc[:, "title"] = df.apply(lambda x: _handle_unicode_str_data(x['title'], x['api_url']), axis=1)
-    # df.loc[:, "body"] = df.apply(lambda x: _handle_unicode_str_data(x['body'], x['api_url']), axis=1)
     columns = [
         "repo_name",
         "event_type",
