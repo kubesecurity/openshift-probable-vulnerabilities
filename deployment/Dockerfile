@@ -11,6 +11,10 @@ RUN source /opt/rh/rh-python36/enable && python -m virtualenv --python=$(which p
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV PYTHONPATH="$PYTHONPATH:/"
 
+# By default cuda image with rh-python36 uses 'ANSI_X3.4-1968' as encoding,
+# Added below line to overcome 'ascii' codec encode character issue
+ENV LC_ALL='en_US.UTF-8'
+
 # Helps speedup docker build time.
 ADD model_inference_triage_pipeline/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt

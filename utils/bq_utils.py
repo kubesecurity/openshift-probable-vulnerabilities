@@ -363,6 +363,5 @@ def get_bq_data_for_inference(ecosystem, day_count, date_range) -> pd.DataFrame:
 
     _logger.info("Creating description column for NLP")
     df["description"] = df["title"].fillna(value="").map(str) + " " + df["body"].fillna(value="")
-    columns = ["title", "body"]
-    df.drop(columns, inplace=True, axis=1)
+
     return df
