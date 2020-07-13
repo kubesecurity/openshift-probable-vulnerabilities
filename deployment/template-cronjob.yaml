@@ -51,6 +51,8 @@ objects:
                 value: ${SKIP_INSERT_API_CALL}
               - name: DATA_INSERT_CONCURRENCY
                 value: ${DATA_INSERT_CONCURRENCY}
+              - name: STRING_CHAR_LIMIT
+                value: ${STRING_CHAR_LIMIT}
               - name: S3_MODEL_BUCKET
                 valueFrom:
                   secretKeyRef:
@@ -189,3 +191,9 @@ parameters:
   name: CRON_SCHEDULE
   # Run every monday 1.am
   value: "0 1 * * MON"
+
+- description: "Max character limit that we are allowing for string such as 'body' while saving data in csv file."
+  displayName: String character Limit
+  required: true
+  name: STRING_CHAR_LIMIT
+  value: "2000"

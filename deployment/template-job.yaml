@@ -52,6 +52,8 @@ objects:
             value: ${SKIP_INSERT_API_CALL}
           - name: DATA_INSERT_CONCURRENCY
             value: ${DATA_INSERT_CONCURRENCY}
+          - name: STRING_CHAR_LIMIT
+            value: ${STRING_CHAR_LIMIT}
           - name: BIGQUERY_CREDENTIALS_FILEPATH
             value: "/etc/credentials/gcloud/google-services.json"
           - name: CVE_MODEL
@@ -177,3 +179,9 @@ parameters:
   required: true
   name: DATA_INSERT_CONCURRENCY
   value: "5"
+
+- description: "Max character limit we are allowing for string such as 'body' while saving data in csv file."
+  displayName: String character Limit
+  required: true
+  name: STRING_CHAR_LIMIT
+  value: "2000"

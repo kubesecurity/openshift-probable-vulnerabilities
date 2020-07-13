@@ -86,5 +86,6 @@ OSA_API_SERVER_HOST = os.environ.get("OSA_API_SERVER_HOST", "osa-api-server")
 OSA_API_SERVER_PORT = os.environ.get("OSA_API_SERVER_PORT", 5000)
 OSA_API_SERVER_URL = 'http://{host}:{port}'.format(host=OSA_API_SERVER_HOST, port=OSA_API_SERVER_PORT)
 DATA_INSERT_CONCURRENCY = int(os.environ.get("DATA_INSERT_CONCURRENCY", 10))
+STRING_CHAR_LIMIT = int(os.environ.get("STRING_CHAR_LIMIT", 2000))
 # Shared instance of S3FileSystem
 INFERENCE_S3FS = S3FileSystem(key=S3_INFERENCE_ACCESS_KEY_ID, secret=S3_INFERENCE_SECRET_ACCESS_KEY)
