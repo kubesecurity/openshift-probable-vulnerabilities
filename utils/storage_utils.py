@@ -5,6 +5,7 @@ import os
 import daiquiri
 
 from utils import cloud_constants as cc
+from utils import other_constants as oc
 
 daiquiri.setup(level=logging.DEBUG)
 _logger = daiquiri.getLogger(__name__)
@@ -15,9 +16,9 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     # ======= PREPARING PROBABLE SECURITY & CVE DATASETS ========
     _logger.info("----- PREPARING PROBABLE SECURITY & CVE DATASETS  -----")
 
-    new_triage_subdir = cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
+    new_triage_subdir = oc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
                                                     end_time=end_time.format("YYYYMMDD"))
-    new_triage_results_dir = os.path.join(cc.BASE_TRIAGE_DIR, new_triage_subdir)
+    new_triage_results_dir = os.path.join(oc.BASE_TRIAGE_DIR, new_triage_subdir)
     file_prefix = get_file_prefix(cve_model_type)
 
     if not s3_upload:
@@ -37,6 +38,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_feedback_comments"] = ""
 
     df.loc[:, "ecosystem"] = ecosystem
+    df.loc[:, "body"] = df.apply(lambda x: x['body'][0:oc.MAX_STRING_LEN_FOR_CSV_EXPORT], axis=1)
     columns = [
         "repo_name",
         "event_type",
@@ -60,15 +62,15 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
         "body"
     ]
     df = df[columns]
-    save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, cc.FULL_OUTPUT)
+    save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, oc.FULL_OUTPUT)
 
     # Now save the probable securities dataset.
     df = df[df.security_model_flag == 1].drop(["triage_is_cve"], axis=1)
-    save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, cc.PROBABLE_SECURITY_AND_CVES)
+    save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, oc.PROBABLE_SECURITY_AND_CVES)
 
     # Now save the probable CVE dataset.
     df = df[df.cve_model_flag == 1].drop(["triage_is_security"], axis=1)
-    save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, cc.PROBABLE_CVES)
+    save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, oc.PROBABLE_CVES)
 
     return df
 
@@ -86,8 +88,8 @@ def get_file_prefix(cve_model_type: str) -> str:
 
 def save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, data_type):
     """Save dataframe data to s3/local file system."""
-    new_triage_results_dir = os.path.join(cc.BASE_TRIAGE_DIR, new_triage_subdir)
-    filename = cc.OUTPUT_FILE_NAME.format(file_prefix=file_prefix, data_type=data_type, triage_dir=new_triage_subdir,
+    new_triage_results_dir = os.path.join(oc.BASE_TRIAGE_DIR, new_triage_subdir)
+    filename = oc.OUTPUT_FILE_NAME.format(file_prefix=file_prefix, data_type=data_type, triage_dir=new_triage_subdir,
                                           ecosystem=ecosystem)
     if not s3_upload:
         dataset = os.path.join(new_triage_results_dir, filename)
