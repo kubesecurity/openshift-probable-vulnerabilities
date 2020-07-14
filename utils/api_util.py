@@ -10,12 +10,13 @@ import pandas as pd
 from aiohttp import ClientSession
 
 from utils import cloud_constants as cc
+from utils import other_constants as oc
 from utils.storage_utils import get_file_prefix, save_data_to_csv
 
 log = daiquiri.getLogger(level=logging.INFO)
 
 INSERT_API_PATH = "/api/v1/pcve"
-API_FULL_PATH = "{host}{api}".format(host=cc.OSA_API_SERVER_URL, api=INSERT_API_PATH)
+API_FULL_PATH = "{host}{api}".format(host=oc.OSA_API_SERVER_URL, api=INSERT_API_PATH)
 
 failed_to_insert = []
 
@@ -32,7 +33,7 @@ def report_failures(df: pd.DataFrame, failed_records, start_time, end_time, s3_u
                       .format(count=len(failed_records), data=failed_list_str))
 
             failed_data = df[df['url'].isin(failed_records)]
-            save_data_to_csv(failed_data, s3_upload, cc.FAILED_TO_INSERT, triage_subdir, ecosystem, cc.PROBABLE_CVES)
+            save_data_to_csv(failed_data, s3_upload, oc.FAILED_TO_INSERT, triage_subdir, ecosystem, oc.PROBABLE_CVES)
 
             log.info("Failed data saved successfully.")
 
@@ -82,7 +83,7 @@ def _update_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _get_triage_subdir(start_time, end_time):
-    return cc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
+    return oc.NEW_TRIAGE_SUBDIR.format(stat_time=start_time.format("YYYYMMDD"),
                                                 end_time=end_time.format("YYYYMMDD"))
 
 
@@ -94,7 +95,7 @@ async def _update_and_save(df: pd.DataFrame, ecosystem: str):
         updated_df = _update_df(df)
         log.info("Update df completed")
 
-        sem = asyncio.BoundedSemaphore(cc.DATA_INSERT_CONCURRENCY)
+        sem = asyncio.BoundedSemaphore(oc.DATA_INSERT_CONCURRENCY)
 
         async with ClientSession() as session:
             await _insert_df(updated_df, API_FULL_PATH, session, sem)
@@ -120,20 +121,20 @@ def save_data_to_db(df: pd.DataFrame, ecosystem: str):
 def read_probable_cve_data(start_time, end_time, cve_model_type: str, s3_upload: bool, ecosystem: str):
     """Read Probable CVE data from the file."""
     triage_subdir = _get_triage_subdir(start_time, end_time)
-    triage_results_dir = os.path.join(cc.BASE_TRIAGE_DIR, triage_subdir)
+    triage_results_dir = os.path.join(oc.BASE_TRIAGE_DIR, triage_subdir)
     file_prefix = get_file_prefix(cve_model_type)
-    filename = cc.OUTPUT_FILE_NAME.format(data_type=cc.PROBABLE_CVES, file_prefix=file_prefix,
+    filename = oc.OUTPUT_FILE_NAME.format(data_type=oc.PROBABLE_CVES, file_prefix=file_prefix,
                                           triage_dir=triage_subdir, ecosystem=ecosystem)
     dataset = os.path.join(triage_results_dir, filename)
 
     df = None
     if not s3_upload:
-        log.info("Reading {} dataset from local folder: {}".format(cc.PROBABLE_CVES, dataset))
+        log.info("Reading {} dataset from local folder: {}".format(oc.PROBABLE_CVES, dataset))
         df = pd.read_csv(dataset, index_col=None, header=0)
     else:
         s3_path = cc.S3_FILE_PATH.format(bucket_name=cc.S3_BUCKET_NAME_INFERENCE, triage_dir=triage_subdir,
                                          dataset_filename=filename)
-        log.info("Reading {} dataset from {}".format(cc.PROBABLE_CVES, s3_path))
+        log.info("Reading {} dataset from {}".format(oc.PROBABLE_CVES, s3_path))
         with cc.INFERENCE_S3FS.open(s3_path) as f:
             df = pd.read_csv(f, index_col=None, header=0)
     return df
