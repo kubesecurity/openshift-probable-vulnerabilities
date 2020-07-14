@@ -38,7 +38,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_feedback_comments"] = ""
 
     df.loc[:, "ecosystem"] = ecosystem
-    df.loc[:, "body"] = df.apply(lambda x: x['body'][0:oc.STRING_CHAR_LIMIT], axis=1)
+    df.loc[:, "body"] = df.apply(lambda x: x['body'][0:oc.MAX_STRING_LEN_FOR_CSV_EXPORT], axis=1)
     columns = [
         "repo_name",
         "event_type",

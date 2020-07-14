@@ -80,4 +80,4 @@ class TestStorageUtils(TestCase):
         # Check body text character length
         # As string is around 2400 characters based on constant it should trim to 2000
         df = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/4408']
-        assert oc.STRING_CHAR_LIMIT == len(df['body'][0])
+        assert oc.MAX_STRING_LEN_FOR_CSV_EXPORT == len(df['body'][0])

@@ -51,8 +51,8 @@ objects:
                 value: ${SKIP_INSERT_API_CALL}
               - name: DATA_INSERT_CONCURRENCY
                 value: ${DATA_INSERT_CONCURRENCY}
-              - name: STRING_CHAR_LIMIT
-                value: ${STRING_CHAR_LIMIT}
+              - name: MAX_STRING_LEN_FOR_CSV_EXPORT
+                value: ${MAX_STRING_LEN_FOR_CSV_EXPORT}
               - name: S3_MODEL_BUCKET
                 valueFrom:
                   secretKeyRef:
@@ -193,7 +193,7 @@ parameters:
   value: "0 1 * * MON"
 
 - description: "Max character limit that we are allowing for string such as 'body' while saving data in csv file."
-  displayName: String character Limit
+  displayName: Max string length for CVE export
   required: true
-  name: STRING_CHAR_LIMIT
+  name: MAX_STRING_LEN_FOR_CSV_EXPORT
   value: "2000"
