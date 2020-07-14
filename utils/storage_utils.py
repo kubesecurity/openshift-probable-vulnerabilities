@@ -38,7 +38,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_feedback_comments"] = ""
 
     df.loc[:, "ecosystem"] = ecosystem
-    df.loc[:, "body"] = df.apply(lambda x: _restrict_data_length(x['body']), axis=1)
+    df.loc[:, "body"] = df.apply(lambda x: x['body'][0:oc.STRING_CHAR_LIMIT], axis=1)
     columns = [
         "repo_name",
         "event_type",
@@ -73,13 +73,6 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, oc.PROBABLE_CVES)
 
     return df
-
-
-def _restrict_data_length(data: str):
-    """Ristrict long length data content."""
-    if data and len(data) > oc.STRING_CHAR_LIMIT:
-        return data[0:oc.STRING_CHAR_LIMIT]
-    return data
 
 
 def get_file_prefix(cve_model_type: str) -> str:
