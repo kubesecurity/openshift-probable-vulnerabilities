@@ -38,6 +38,9 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     df["triage_feedback_comments"] = ""
 
     df.loc[:, "ecosystem"] = ecosystem
+    _logger.info("MAX_STRING_LEN_FOR_CSV_EXPORT : {}".format(oc.MAX_STRING_LEN_FOR_CSV_EXPORT))
+    df.loc[:, "test"] = df.apply(lambda x: _test(x['api_url'], x['body']), axis=1)
+
     df.loc[:, "body"] = df.apply(lambda x: x['body'][0:oc.MAX_STRING_LEN_FOR_CSV_EXPORT], axis=1)
     columns = [
         "repo_name",
@@ -73,6 +76,11 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
     save_data_to_csv(df, s3_upload, file_prefix, new_triage_subdir, ecosystem, oc.PROBABLE_CVES)
 
     return df
+
+
+def _test(body: str, api_url:str) -> str:
+    _logger.info("api_url: {}, body: {}".format(api_url, body))
+    return body[0:oc.MAX_STRING_LEN_FOR_CSV_EXPORT]
 
 
 def get_file_prefix(cve_model_type: str) -> str:
