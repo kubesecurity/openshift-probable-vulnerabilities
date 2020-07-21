@@ -77,7 +77,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
 
 def _restrict_data_length(data: str) -> str:
     """Ristrict long length data content."""
-    return data[0:oc.MAX_STRING_LEN_FOR_CSV_EXPORT] if data else data
+    return data[0:oc.MAX_STRING_LEN_FOR_CSV_EXPORT] if data else None
 
 
 def get_file_prefix(cve_model_type: str) -> str:
