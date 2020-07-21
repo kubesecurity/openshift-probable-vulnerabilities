@@ -32,8 +32,8 @@ class TestStorageUtils(TestCase):
 
         # In the code we are adding fillna & map function before passing to write_output_csv function
         # so doing the same with the df created above
-        df["body"] = df["body"].fillna(value="").map(str)
-        df["title"] = df["title"].fillna(value="").map(str)
+        df["body"] = df["body"].fillna(value="")
+        df["title"] = df["title"].fillna(value="")
 
         # Check if mocks are setup properly.
         assert pd.DataFrame.to_csv is to_mock_csv
@@ -89,6 +89,4 @@ class TestStorageUtils(TestCase):
 
         # Test body value with Empty string
         df_with_blank_body = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/5222']
-        assert df_with_blank_body['body'].iloc[0] == ''
-
-
+        assert df_with_blank_body['body'].iloc[0] is None
