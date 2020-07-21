@@ -30,6 +30,11 @@ class TestStorageUtils(TestCase):
         """Test to check output csv."""
         df = pd.read_csv("tests/test_data/test_triage_results.csv")
 
+        # In the code we are adding fillna & map function before passing to write_output_csv function
+        # so doing the same with the df created above
+        df["body"] = df["body"].fillna(value="")
+        df["title"] = df["title"].fillna(value="")
+
         # Check if mocks are setup properly.
         assert pd.DataFrame.to_csv is to_mock_csv
         assert os.makedirs is do_nothing
@@ -79,5 +84,9 @@ class TestStorageUtils(TestCase):
 
         # Check body text character length
         # As string is around 2400 characters based on constant it should trim to 2000
-        df = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/4408']
-        assert oc.MAX_STRING_LEN_FOR_CSV_EXPORT == len(df['body'][0])
+        df_with_trimed_body = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/4408']
+        assert oc.MAX_STRING_LEN_FOR_CSV_EXPORT == len(df_with_trimed_body['body'][0])
+
+        # Test body value with Empty string
+        df_with_blank_body = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/5222']
+        assert df_with_blank_body['body'].iloc[0] is None
