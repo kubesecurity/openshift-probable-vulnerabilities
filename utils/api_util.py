@@ -12,7 +12,7 @@ from aiohttp import ClientSession
 from utils import cloud_constants as cc
 from utils import other_constants as oc
 from utils.storage_utils import get_file_prefix, save_data_to_csv
-
+pd.set_option('display.max_columns', None)
 log = daiquiri.getLogger(level=logging.INFO)
 
 INSERT_API_PATH = "/api/v1/pcve"
@@ -52,8 +52,10 @@ async def _insert_df(df, url, session: ClientSession, sem):
 
 async def _add_data(obj, session: ClientSession, url, sem):
     """Call API server and insert data."""
+    logging.info("---add data through api ----")
     async with sem, session.post(url, json=obj) as response:
-        log.info('Got response {} for {}'.format(response.status, obj["url"]))
+        log.debug('Got response {} for {}'.format(response.status, obj))
+        # log.info('Got response {} for {}'.format(response.status, obj["url"]))
         if response.status != 200:
             failed_to_insert.append(obj["url"])
             log.error('Error response {}, msg {}, data: {}'
@@ -80,6 +82,10 @@ def _update_cve_data(cves: str) -> list:
 
 def _update_df(df: pd.DataFrame) -> pd.DataFrame:
     """Update few property of the dataframe to make it work with API sevrer."""
+
+    logging.info("before updating df")
+    logging.info(df.to_string())
+
     df.loc[:, "ecosystem"] = df['ecosystem'].str.upper()
     df.loc[:, "status"] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
     df.loc[:, "probable_cve"] = df.apply(lambda x: _get_probabled_cve(x['cve_model_flag']), axis=1)
@@ -87,6 +93,8 @@ def _update_df(df: pd.DataFrame) -> pd.DataFrame:
     df["cves"] = df["cves"].fillna(value="")
     df.loc[:, "cves"] = df.apply(lambda x: _update_cve_data(x["cves"]), axis=1)
 
+    logging.info("after updating df")
+    logging.info(df.to_string())
     return df.where(pd.notnull(df), None)
 
 
