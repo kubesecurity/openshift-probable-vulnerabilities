@@ -54,7 +54,7 @@ async def _add_data(obj, session: ClientSession, url, sem):
     """Call API server and insert data."""
     logging.info("---add data through api ----")
     async with sem, session.post(url, json=obj) as response:
-        log.debug('Got response {} for {}'.format(response.status, obj))
+        log.info('Got response {} for {}'.format(response.status, obj))
         # log.info('Got response {} for {}'.format(response.status, obj["url"]))
         if response.status != 200:
             failed_to_insert.append(obj["url"])
