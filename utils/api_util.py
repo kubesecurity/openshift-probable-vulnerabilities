@@ -73,11 +73,19 @@ def _get_probabled_cve(cve_model_flag: int) -> bool:
     return True if cve_model_flag is not None and cve_model_flag == 1 else False
 
 
+def _update_cve_data(cves: str) -> list:
+    """update cve data from comma separated string to list."""
+    return cves.split(",") if cves else None
+
+
 def _update_df(df: pd.DataFrame) -> pd.DataFrame:
     """Update few property of the dataframe to make it work with API sevrer."""
     df.loc[:, "ecosystem"] = df['ecosystem'].str.upper()
     df.loc[:, "status"] = df.apply(lambda x: _get_status_type(x['status']), axis=1)
     df.loc[:, "probable_cve"] = df.apply(lambda x: _get_probabled_cve(x['cve_model_flag']), axis=1)
+
+    df["cves"] = df["cves"].fillna(value="")
+    df.loc[:, "cves"] = df.apply(lambda x: _update_cve_data(x["cves"]), axis=1)
 
     return df.where(pd.notnull(df), None)
 

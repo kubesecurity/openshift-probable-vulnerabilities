@@ -16,6 +16,7 @@ from utils import other_constants as oc
 from utils.bq_utils import get_bq_data_for_inference
 from utils.storage_utils import write_output_csv
 from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
+from utils.cve_utils import update_cve_info
 
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
@@ -49,6 +50,8 @@ def main():
 
     df = get_bq_data_for_inference(ECOSYSTEM, day_count, date_range)
     df = run_inference(df, CVE_MODEL_TYPE)
+    df = update_cve_info(df)
+
     write_output_csv(
         start_time,
         end_time,

@@ -59,6 +59,7 @@ def write_output_csv(start_time, end_time, cve_model_type, ecosystem, df, s3_upl
         "creator_url",
         "ecosystem",
         "title",
+        "cves",
         "body"
     ]
     df = df[columns]
