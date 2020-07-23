@@ -28,7 +28,7 @@ class TestStorageUtils(TestCase):
     @mock.patch("os.makedirs")
     def test_write_output_csv(self, do_nothing, to_mock_csv):
         """Test to check output csv."""
-        df = pd.read_csv("tests/test_data/test_triage_results.csv")
+        df = pd.read_csv("tests/test_data/test_triage_results_with_cves.csv")
 
         # In the code we are adding fillna & map function before passing to write_output_csv function
         # so doing the same with the df created above
@@ -75,7 +75,8 @@ class TestStorageUtils(TestCase):
                 "creator_url",
                 "title",
                 "body",
-                "ecosystem"
+                "ecosystem",
+                "cves"
             },
         )
 

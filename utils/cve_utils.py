@@ -8,7 +8,7 @@ CVE_REGULAR_EXPRESSION = r"CVE-\d{4}-\d{4,}"
 
 def get_cves_from_text(data: str) -> set:
     """Get the CVEs from the given text."""
-    cves = re.findall(CVE_REGULAR_EXPRESSION, data)
+    cves = re.findall(CVE_REGULAR_EXPRESSION, data.upper())
     return set(cves)
 
 
