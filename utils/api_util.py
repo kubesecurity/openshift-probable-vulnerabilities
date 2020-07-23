@@ -53,7 +53,7 @@ async def _insert_df(df, url, session: ClientSession, sem):
 async def _add_data(obj, session: ClientSession, url, sem):
     """Call API server and insert data."""
     async with sem, session.post(url, json=obj) as response:
-        log.info('Got response {} for {}'.format(response.status, obj))
+        log.info('Got response {} for {}'.format(response.status, obj["url"]))
         if response.status != 200:
             failed_to_insert.append(obj["url"])
             log.error('Error response {}, msg {}, data: {}'
