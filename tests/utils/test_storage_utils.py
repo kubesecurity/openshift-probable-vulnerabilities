@@ -6,7 +6,6 @@ from unittest import mock
 import arrow
 import pandas as pd
 
-from utils import other_constants as oc
 from utils.storage_utils import write_output_csv
 
 
@@ -81,12 +80,3 @@ class TestStorageUtils(TestCase):
 
         # Check if ecosystem is properly set.
         self.assertListEqual(df["ecosystem"].unique().tolist(), ["knative"])
-
-        # Check body text character length
-        # As string is around 2400 characters based on constant it should trim to 2000
-        df_with_trimed_body = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/4408']
-        assert oc.MAX_STRING_LEN_FOR_CSV_EXPORT == len(df_with_trimed_body['body'][0])
-
-        # Test body value with Empty string
-        df_with_blank_body = df[df.url == 'https://github.com/Azure/azure-sdk-for-go/issues/5222']
-        assert df_with_blank_body['body'].iloc[0] is None
