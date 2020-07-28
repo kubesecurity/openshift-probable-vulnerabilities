@@ -176,4 +176,4 @@ parameters:
   displayName: Data Insert Concurrency
   required: true
   name: DATA_INSERT_CONCURRENCY
-  value: "5"
+  value: "3"
