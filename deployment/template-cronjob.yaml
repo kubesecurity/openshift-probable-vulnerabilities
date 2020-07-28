@@ -151,7 +151,7 @@ parameters:
   displayName: Days for which report needs to be run
   required: true
   name: DAYS
-  value: "7"
+  value: "1"
 
 - description: "The CVE model type to use for inference, accepted values - bert/bert_torch/gru"
   displayName: CVE Model Name
@@ -181,7 +181,7 @@ parameters:
   displayName: Data Insert Concurrency
   required: true
   name: DATA_INSERT_CONCURRENCY
-  value: "5"
+  value: "3"
 
 - description: "CronJob scheduler value"
   displayName: CronJob scheduler value
