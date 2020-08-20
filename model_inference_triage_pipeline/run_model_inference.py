@@ -23,6 +23,11 @@ from utils.storage_utils import write_output_csv
 sentry_logging = LoggingIntegration(level=logging.ERROR, event_level=logging.ERROR)
 sentry_sdk.init(dsn=oc.SENTRY_DSN, integrations=[sentry_logging])
 
+sentry_sdk.capture_exception(Exception("This is an example of an error message."))
+i = 0
+j = 1/i
+
+
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
 warnings.simplefilter(action="ignore", category=FutureWarning)
