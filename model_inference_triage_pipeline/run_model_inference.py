@@ -20,7 +20,7 @@ from utils.bq_utils import get_bq_data_for_inference
 from utils.storage_utils import write_output_csv
 
 # Set Sentry log level and initialize it.
-sentry_logging = LoggingIntegration(level=logging.ERROR, event_level=logging.ERROR)
+sentry_logging = LoggingIntegration(level=None, event_level=logging.ERROR)
 sentry_sdk.init(dsn=oc.SENTRY_DSN, integrations=[sentry_logging])
 
 sentry_sdk.capture_exception(Exception("This is an example of an error message."))
