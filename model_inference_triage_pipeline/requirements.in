@@ -19,3 +19,4 @@ s3fs
 transformers==2.8.0
 torch==1.2.0
 aiohttp
+sentry-sdk
