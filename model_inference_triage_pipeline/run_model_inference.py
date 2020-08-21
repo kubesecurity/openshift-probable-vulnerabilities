@@ -28,6 +28,9 @@ _logger = daiquiri.getLogger(__name__)
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=Warning)
 
+# TODO - Remove below line once we test Sentry working in PROD.
+sentry_sdk.capture_exception(Exception("This is an example of an error message."))
+
 
 def main():
     """Entry point for inference pipeline."""
