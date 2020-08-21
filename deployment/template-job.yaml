@@ -76,6 +76,11 @@ objects:
               secretKeyRef:
                 key: aws_secret_access_key
                 name: openshift-probable-vulnerability-inference-result-s3
+          - name: SENTRY_DSN
+            valueFrom:
+              secretKeyRef:
+                name: osa
+                key: sentry_dsn
           volumeMounts:
             - name: credentials
               mountPath: "/etc/credentials/"

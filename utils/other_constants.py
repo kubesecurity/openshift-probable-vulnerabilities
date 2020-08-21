@@ -17,3 +17,5 @@ OSA_API_SERVER_PORT = os.environ.get("OSA_API_SERVER_PORT", 5000)
 OSA_API_SERVER_URL = 'http://{host}:{port}'.format(host=OSA_API_SERVER_HOST, port=OSA_API_SERVER_PORT)
 DATA_INSERT_CONCURRENCY = int(os.environ.get("DATA_INSERT_CONCURRENCY", 10))
 SKIP_INSERT_API_CALL = os.environ.get("SKIP_INSERT_API_CALL", "false").lower() == "true"
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")

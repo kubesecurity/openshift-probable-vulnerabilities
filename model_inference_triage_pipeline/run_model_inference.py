@@ -9,13 +9,19 @@ import warnings
 import arrow
 import daiquiri
 import pandas as pd
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 from utils import aws_utils as aws
 from utils import cloud_constants as cc
 from utils import other_constants as oc
+from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
 from utils.bq_utils import get_bq_data_for_inference
 from utils.storage_utils import write_output_csv
-from utils.api_util import save_data_to_db, report_failures, read_probable_cve_data
+
+# Set Sentry log level and initialize it.
+sentry_logging = LoggingIntegration(level=logging.ERROR, event_level=logging.ERROR)
+sentry_sdk.init(dsn=oc.SENTRY_DSN, integrations=[sentry_logging])
 
 daiquiri.setup(level=logging.INFO)
 _logger = daiquiri.getLogger(__name__)
