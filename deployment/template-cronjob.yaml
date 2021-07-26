@@ -192,5 +192,5 @@ parameters:
   displayName: CronJob scheduler value
   required: true
   name: CRON_SCHEDULE
-  # Run every day at 1.00am
-  value: "0 1 * * *"
+  # Updating cron to 30th feb so it wont execute anytime. 
+  value: "0 1 30 2 *"
