@@ -192,5 +192,5 @@ parameters:
   displayName: CronJob scheduler value
   required: true
   name: CRON_SCHEDULE
-  # As saas file tried to make this job run each day, updating cron syntax to execute only once in a year just to disable daily run as we are not using the same for now. 
-  value: "0 1 1 6 *"
+  # Updating cron to 30th feb so it wont execute anytime. 
+  value: "0 1 30 2 *"
